@@ -1,1 +1,4 @@
-// Custom hooks exports will be added here
+// Custom React hooks exports
+export * from './useWorkoutTemplates';
+export * from './useExerciseLibrary';
+export * from './useWorkoutGenerator';

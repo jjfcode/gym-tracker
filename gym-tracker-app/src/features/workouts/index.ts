@@ -1,1 +1,2 @@
-// Workouts feature exports will be added here
+// Workouts feature exports
+export * from './components';
