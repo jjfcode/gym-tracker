@@ -17,7 +17,7 @@ export type {
   ResetPasswordFormData,
   UpdatePasswordFormData,
   AuthError,
-} from '../types/auth';
+} from '../../types/auth';
 
 // Auth store
 export {
@@ -26,7 +26,7 @@ export {
   useIsAuthenticated,
   useAuthLoading,
   useAuthError,
-} from '../store/authStore';
+} from '../../store/authStore';
 
 // Auth service
-export { AuthService } from '../lib/auth';
+export { AuthService } from '../../lib/auth';

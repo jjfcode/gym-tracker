@@ -35,7 +35,7 @@
   - Write tests for authentication flows
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6_
 
-- [ ] 5. User Onboarding Flow
+- [x] 5. User Onboarding Flow
   - Create onboarding layout with progress indicator
   - Build Welcome screen with introduction and navigation
   - Implement weight input screen with unit selection (kg/lbs)
