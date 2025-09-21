@@ -1,0 +1,128 @@
+.container {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.dateSection {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.dateInput {
+  flex: 1;
+}
+
+.todayBadge {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.weightSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.weightInput {
+  /* Styles handled by Input component */
+}
+
+.weightPreview {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.previewLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.previewValue {
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.noteInput {
+  /* Styles handled by Input component */
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.actions > * {
+  flex: 1;
+}
+
+.error {
+  padding: var(--spacing-sm);
+  background: var(--color-error-background);
+  color: var(--color-error-foreground);
+  border: 1px solid var(--color-error);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+  .container {
+    max-width: 100%;
+  }
+  
+  .header {
+    gap: var(--spacing-sm);
+  }
+  
+  .dateSection {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .todayBadge {
+    align-self: flex-start;
+  }
+  
+  .actions {
+    flex-direction: column;
+  }
+  
+  .actions > * {
+    flex: none;
+  }
+}

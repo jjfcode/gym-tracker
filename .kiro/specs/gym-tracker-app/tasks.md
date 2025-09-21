@@ -74,7 +74,7 @@
   - Write integration tests for workout data operations
   - _Requirements: 3.3, 3.4, 3.5, 3.6_
 
-- [ ] 9. Weight Tracking System
+- [x] 9. Weight Tracking System
   - Create WeightLogger component with date picker and unit conversion
   - Implement weight history storage and retrieval with Supabase
   - Build WeightChart component using Recharts for data visualization

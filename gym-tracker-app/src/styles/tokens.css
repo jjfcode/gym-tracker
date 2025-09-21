@@ -38,6 +38,9 @@
 
   /* Semantic Colors - Light Theme */
   --color-background: var(--color-gray-50);
+  --color-background-primary: #ffffff;
+  --color-background-secondary: var(--color-gray-100);
+  --color-background-tertiary: var(--color-gray-200);
   --color-surface: #ffffff;
   --color-surface-secondary: var(--color-gray-100);
   --color-text-primary: var(--color-gray-900);
@@ -48,9 +51,15 @@
   
   /* Component Colors */
   --color-primary: var(--color-primary-600);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: var(--color-gray-600);
   --color-success: var(--color-success-500);
   --color-success-light: var(--color-success-50);
+  --color-success-background: var(--color-success-50);
+  --color-success-foreground: var(--color-success-600);
   --color-error: var(--color-error-500);
+  --color-error-background: var(--color-error-50);
+  --color-error-foreground: var(--color-error-600);
   --color-warning: var(--color-warning-500);
 
   /* Typography */
@@ -144,6 +153,9 @@
 /* Dark Theme */
 [data-theme='dark'] {
   --color-background: var(--color-gray-900);
+  --color-background-primary: var(--color-gray-800);
+  --color-background-secondary: var(--color-gray-700);
+  --color-background-tertiary: var(--color-gray-600);
   --color-surface: var(--color-gray-800);
   --color-surface-secondary: var(--color-gray-700);
   --color-text-primary: var(--color-gray-100);
@@ -151,12 +163,16 @@
   --color-text-muted: var(--color-gray-400);
   --color-border: var(--color-gray-700);
   --color-border-focus: var(--color-primary-400);
+  --color-secondary: var(--color-gray-400);
 }
 
 /* System Theme Preference */
 @media (prefers-color-scheme: dark) {
   [data-theme='system'] {
     --color-background: var(--color-gray-900);
+    --color-background-primary: var(--color-gray-800);
+    --color-background-secondary: var(--color-gray-700);
+    --color-background-tertiary: var(--color-gray-600);
     --color-surface: var(--color-gray-800);
     --color-surface-secondary: var(--color-gray-700);
     --color-text-primary: var(--color-gray-100);
@@ -164,5 +180,6 @@
     --color-text-muted: var(--color-gray-400);
     --color-border: var(--color-gray-700);
     --color-border-focus: var(--color-primary-400);
+    --color-secondary: var(--color-gray-400);
   }
 }

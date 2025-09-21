@@ -11,6 +11,7 @@ const Home = () => (
       <h2>Available Pages:</h2>
       <ul>
         <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/progress">Progress Tracking</a></li>
         <li><a href="/onboarding">Onboarding</a></li>
       </ul>
     </div>
@@ -26,6 +27,9 @@ const OnboardingPlaceholder = () => (
 );
 
 import Dashboard from './features/dashboard/components/Dashboard';
+import { ProgressPage } from './features/progress';
+import ProgressDemo from './features/progress/components/ProgressDemo';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   return (
@@ -35,6 +39,11 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/onboarding" element={<OnboardingPlaceholder />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/progress" element={
+            <ErrorBoundary>
+              <ProgressDemo />
+            </ErrorBoundary>
+          } />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </ThemeProvider>
