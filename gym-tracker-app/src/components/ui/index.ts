@@ -12,5 +12,5 @@ export { default as Modal } from './Modal';
 export type { ModalSize } from './Modal';
 
 // Theme Components
-export { default as ThemeProvider } from './ThemeProvider';
-export { default as ThemeToggle } from './ThemeToggle';
+export { ThemeProvider } from './ThemeProvider';
+export { ThemeToggle } from './ThemeToggle';

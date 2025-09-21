@@ -1,1 +1,3 @@
-// Dashboard feature exports will be added here
+// Dashboard feature exports
+export * from './components';
+export * from './hooks';
