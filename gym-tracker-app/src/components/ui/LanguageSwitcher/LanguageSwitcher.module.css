@@ -1,0 +1,86 @@
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.select {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.select:hover {
+  border-color: var(--color-border-hover);
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-alpha);
+}
+
+.toggle {
+  display: flex;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+}
+
+.toggleButton {
+  background: transparent;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 40px;
+}
+
+.toggleButton:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.toggleButton.active {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.toggleButton:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--color-primary-alpha);
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .select {
+  background: var(--color-surface-dark);
+  border-color: var(--color-border-dark);
+  color: var(--color-text-dark);
+}
+
+[data-theme="dark"] .select:hover {
+  border-color: var(--color-border-hover-dark);
+}
+
+[data-theme="dark"] .toggle {
+  background: var(--color-surface-dark);
+  border-color: var(--color-border-dark);
+}
+
+[data-theme="dark"] .toggleButton {
+  color: var(--color-text-secondary-dark);
+}
+
+[data-theme="dark"] .toggleButton:hover {
+  background: var(--color-surface-hover-dark);
+  color: var(--color-text-dark);
+}

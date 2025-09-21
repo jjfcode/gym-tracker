@@ -148,6 +148,7 @@ export const getWeightStats = (weightLogs: WeightLog[]): {
 
 /**
  * Format date for display
+ * @deprecated Use useDateFormatter hook instead for i18n support
  */
 export const formatDate = (dateString: string): string => {
   const date = new Date(dateString);

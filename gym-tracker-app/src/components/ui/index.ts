@@ -20,3 +20,6 @@ export type { TextareaProps } from './Textarea';
 // Theme Components
 export { ThemeProvider } from './ThemeProvider';
 export { ThemeToggle } from './ThemeToggle';
+
+// Internationalization Components
+export { LanguageSwitcher } from './LanguageSwitcher';

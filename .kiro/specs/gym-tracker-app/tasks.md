@@ -114,7 +114,7 @@
   - Add data export functionality for user data portability
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6_
 
-- [ ] 13. Internationalization (i18n) Setup
+- [x] 13. Internationalization (i18n) Setup
   - Configure i18next for English and Spanish language support
   - Create translation files for all UI text and messages
   - Implement language detection and switching functionality

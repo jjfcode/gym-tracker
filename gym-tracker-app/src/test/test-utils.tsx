@@ -1,11 +1,36 @@
 import React from 'react';
 import { render, RenderOptions } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from '../components/ui/ThemeProvider';
+import '../lib/i18n'; // Initialize i18n
+
+// Test wrapper component that provides all necessary contexts
+export const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+      mutations: {
+        retry: false,
+      },
+    },
+  });
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        {children}
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
 
 // Custom render function that can be extended with providers
 const customRender = (
   ui: React.ReactElement,
   options?: Omit<RenderOptions, 'wrapper'>
-) => render(ui, options);
+) => render(ui, { wrapper: TestWrapper, ...options });
 
 // Helper to check if element has CSS Module class
 export const hasModuleClass = (element: Element, className: string): boolean => {

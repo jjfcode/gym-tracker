@@ -2,3 +2,6 @@
 export * from './useWorkoutTemplates';
 export * from './useExerciseLibrary';
 export * from './useWorkoutGenerator';
+
+// Internationalization hooks
+export * from './useTranslation';

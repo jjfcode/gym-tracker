@@ -3,34 +3,37 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, Button, Select } from '../../../components/ui';
 import { ThemeToggle } from '../../../components/ui/ThemeToggle';
+import { LanguageSwitcher } from '../../../components/ui/LanguageSwitcher';
 import { useSettings } from '../hooks/useSettings';
+import { useTranslation } from '../../../hooks/useTranslation';
 import { preferencesFormSchema } from '../../../lib/validations/settings';
 import type { PreferencesFormData } from '../types';
 import styles from './PreferencesSettings.module.css';
 
-const themeOptions = [
-  { value: 'light', label: 'Light' },
-  { value: 'dark', label: 'Dark' },
-  { value: 'system', label: 'System' },
-];
-
-const languageOptions = [
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Español' },
-];
-
-const unitOptions = [
-  { value: 'imperial', label: 'Imperial (lbs, ft)' },
-  { value: 'metric', label: 'Metric (kg, cm)' },
-];
-
 export const PreferencesSettings: React.FC = () => {
+  const { t } = useTranslation();
   const { 
     currentPreferences,
     updatePreferences, 
     isUpdatingPreferences, 
     preferencesUpdateSuccess 
   } = useSettings();
+
+  const themeOptions = [
+    { value: 'light', label: t('settings.light') },
+    { value: 'dark', label: t('settings.dark') },
+    { value: 'system', label: t('settings.system') },
+  ];
+
+  const languageOptions = [
+    { value: 'en', label: t('settings.english') },
+    { value: 'es', label: t('settings.spanish') },
+  ];
+
+  const unitOptions = [
+    { value: 'imperial', label: t('settings.imperial') },
+    { value: 'metric', label: t('settings.metric') },
+  ];
 
   const {
     handleSubmit,
@@ -75,9 +78,9 @@ export const PreferencesSettings: React.FC = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2 className={styles.title}>Preferences</h2>
+        <h2 className={styles.title}>{t('settings.preferences')}</h2>
         <p className={styles.subtitle}>
-          Customize your app experience with theme, language, and unit preferences
+          {t('settings.preferences')}
         </p>
       </div>
 
@@ -85,18 +88,18 @@ export const PreferencesSettings: React.FC = () => {
         {/* Theme Settings */}
         <Card className={styles.card}>
           <div className={styles.cardHeader}>
-            <h3 className={styles.cardTitle}>Appearance</h3>
+            <h3 className={styles.cardTitle}>{t('common.appearance') || 'Appearance'}</h3>
             <p className={styles.cardDescription}>
-              Choose how the app looks and feels
+              {t('common.appearance') || 'Choose how the app looks and feels'}
             </p>
           </div>
 
           <div className={styles.cardContent}>
             <div className={styles.preferenceItem}>
               <div className={styles.preferenceInfo}>
-                <label className={styles.preferenceLabel}>Theme</label>
+                <label className={styles.preferenceLabel}>{t('settings.theme')}</label>
                 <p className={styles.preferenceDescription}>
-                  Select your preferred color scheme
+                  {t('common.selectTheme') || 'Select your preferred color scheme'}
                 </p>
               </div>
               <div className={styles.preferenceControl}>
@@ -104,16 +107,16 @@ export const PreferencesSettings: React.FC = () => {
                   options={themeOptions}
                   value={watchedValues.theme}
                   onChange={(value) => handleQuickUpdate('theme', value as string)}
-                  placeholder="Select theme"
+                  placeholder={t('common.select')}
                 />
               </div>
             </div>
 
             <div className={styles.preferenceItem}>
               <div className={styles.preferenceInfo}>
-                <label className={styles.preferenceLabel}>Quick Theme Toggle</label>
+                <label className={styles.preferenceLabel}>{t('common.quickToggle') || 'Quick Theme Toggle'}</label>
                 <p className={styles.preferenceDescription}>
-                  Use the button below to quickly cycle through themes
+                  {t('common.quickToggleDesc') || 'Use the button below to quickly cycle through themes'}
                 </p>
               </div>
               <div className={styles.preferenceControl}>
@@ -126,27 +129,34 @@ export const PreferencesSettings: React.FC = () => {
         {/* Language Settings */}
         <Card className={styles.card}>
           <div className={styles.cardHeader}>
-            <h3 className={styles.cardTitle}>Language & Region</h3>
+            <h3 className={styles.cardTitle}>{t('common.languageRegion') || 'Language & Region'}</h3>
             <p className={styles.cardDescription}>
-              Set your language and regional preferences
+              {t('common.languageRegionDesc') || 'Set your language and regional preferences'}
             </p>
           </div>
 
           <div className={styles.cardContent}>
             <div className={styles.preferenceItem}>
               <div className={styles.preferenceInfo}>
-                <label className={styles.preferenceLabel}>Language</label>
+                <label className={styles.preferenceLabel}>{t('settings.language')}</label>
                 <p className={styles.preferenceDescription}>
-                  Choose your preferred language for the interface
+                  {t('common.chooseLanguage') || 'Choose your preferred language for the interface'}
                 </p>
               </div>
               <div className={styles.preferenceControl}>
-                <Select
-                  options={languageOptions}
-                  value={watchedValues.language}
-                  onChange={(value) => handleQuickUpdate('language', value as string)}
-                  placeholder="Select language"
-                />
+                <LanguageSwitcher variant="dropdown" />
+              </div>
+            </div>
+
+            <div className={styles.preferenceItem}>
+              <div className={styles.preferenceInfo}>
+                <label className={styles.preferenceLabel}>{t('common.quickLanguageToggle') || 'Quick Language Toggle'}</label>
+                <p className={styles.preferenceDescription}>
+                  {t('common.quickLanguageToggleDesc') || 'Use the toggle below to quickly switch languages'}
+                </p>
+              </div>
+              <div className={styles.preferenceControl}>
+                <LanguageSwitcher variant="toggle" />
               </div>
             </div>
 
@@ -159,8 +169,7 @@ export const PreferencesSettings: React.FC = () => {
                 </svg>
               </div>
               <p>
-                Language changes will be applied immediately. 
-                Some text may require a page refresh to update completely.
+                {t('common.languageChangeNote') || 'Language changes will be applied immediately. Some text may require a page refresh to update completely.'}
               </p>
             </div>
           </div>
@@ -169,18 +178,18 @@ export const PreferencesSettings: React.FC = () => {
         {/* Units Settings */}
         <Card className={styles.card}>
           <div className={styles.cardHeader}>
-            <h3 className={styles.cardTitle}>Units & Measurements</h3>
+            <h3 className={styles.cardTitle}>{t('settings.units')}</h3>
             <p className={styles.cardDescription}>
-              Choose your preferred measurement system
+              {t('common.chooseUnits') || 'Choose your preferred measurement system'}
             </p>
           </div>
 
           <div className={styles.cardContent}>
             <div className={styles.preferenceItem}>
               <div className={styles.preferenceInfo}>
-                <label className={styles.preferenceLabel}>Unit System</label>
+                <label className={styles.preferenceLabel}>{t('settings.units')}</label>
                 <p className={styles.preferenceDescription}>
-                  Select between metric and imperial units
+                  {t('common.selectUnits') || 'Select between metric and imperial units'}
                 </p>
               </div>
               <div className={styles.preferenceControl}>
@@ -188,22 +197,22 @@ export const PreferencesSettings: React.FC = () => {
                   options={unitOptions}
                   value={watchedValues.units}
                   onChange={(value) => handleQuickUpdate('units', value as string)}
-                  placeholder="Select unit system"
+                  placeholder={t('common.select')}
                 />
               </div>
             </div>
 
             <div className={styles.unitsPreview}>
-              <h4 className={styles.previewTitle}>Preview</h4>
+              <h4 className={styles.previewTitle}>{t('common.preview') || 'Preview'}</h4>
               <div className={styles.previewGrid}>
                 <div className={styles.previewItem}>
-                  <span className={styles.previewLabel}>Weight:</span>
+                  <span className={styles.previewLabel}>{t('workouts.weight')}:</span>
                   <span className={styles.previewValue}>
                     {watchedValues.units === 'metric' ? '70 kg' : '154 lbs'}
                   </span>
                 </div>
                 <div className={styles.previewItem}>
-                  <span className={styles.previewLabel}>Height:</span>
+                  <span className={styles.previewLabel}>{t('common.height') || 'Height'}:</span>
                   <span className={styles.previewValue}>
                     {watchedValues.units === 'metric' ? '175 cm' : '5\'9"'}
                   </span>
@@ -221,7 +230,7 @@ export const PreferencesSettings: React.FC = () => {
                 type="submit"
                 loading={isUpdatingPreferences}
               >
-                {isUpdatingPreferences ? 'Saving...' : 'Save All Changes'}
+                {isUpdatingPreferences ? t('common.loading') : t('common.save')}
               </Button>
               
               <Button
@@ -230,7 +239,7 @@ export const PreferencesSettings: React.FC = () => {
                 onClick={() => reset()}
                 disabled={isUpdatingPreferences}
               >
-                Reset Changes
+                {t('common.reset')}
               </Button>
             </div>
           </Card>
@@ -243,7 +252,7 @@ export const PreferencesSettings: React.FC = () => {
                 <polyline points="20,6 9,17 4,12"></polyline>
               </svg>
             </div>
-            Preferences updated successfully!
+            {t('common.success')}
           </div>
         )}
       </form>

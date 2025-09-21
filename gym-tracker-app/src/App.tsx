@@ -15,6 +15,7 @@ const Home = () => (
         <li><a href="/exercises">Exercise Library</a></li>
         <li><a href="/onboarding">Onboarding</a></li>
         <li><a href="/settings">Settings</a></li>
+        <li><a href="/i18n-demo">🌍 I18n Demo</a></li>
       </ul>
     </div>
   </div>
@@ -35,6 +36,7 @@ import { PlanningView } from './features/planning';
 import ExerciseLibraryDemo from './features/exercises/components/ExerciseLibraryDemo';
 import { Settings } from './features/settings';
 import ErrorBoundary from './components/ErrorBoundary';
+import { I18nDemo } from './components/I18nDemo';
 
 function App() {
   return (
@@ -62,6 +64,11 @@ function App() {
           <Route path="/settings" element={
             <ErrorBoundary>
               <Settings />
+            </ErrorBoundary>
+          } />
+          <Route path="/i18n-demo" element={
+            <ErrorBoundary>
+              <I18nDemo />
             </ErrorBoundary>
           } />
           <Route path="*" element={<Navigate to="/" replace />} />
