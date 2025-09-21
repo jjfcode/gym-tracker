@@ -14,6 +14,7 @@ const Home = () => (
         <li><a href="/progress">Progress Tracking</a></li>
         <li><a href="/exercises">Exercise Library</a></li>
         <li><a href="/onboarding">Onboarding</a></li>
+        <li><a href="/settings">Settings</a></li>
       </ul>
     </div>
   </div>
@@ -32,6 +33,7 @@ import { ProgressPage } from './features/progress';
 import ProgressDemo from './features/progress/components/ProgressDemo';
 import { PlanningView } from './features/planning';
 import ExerciseLibraryDemo from './features/exercises/components/ExerciseLibraryDemo';
+import { Settings } from './features/settings';
 import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
@@ -55,6 +57,11 @@ function App() {
           <Route path="/exercises" element={
             <ErrorBoundary>
               <ExerciseLibraryDemo />
+            </ErrorBoundary>
+          } />
+          <Route path="/settings" element={
+            <ErrorBoundary>
+              <Settings />
             </ErrorBoundary>
           } />
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,0 +1,102 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.header {
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.errorCard {
+  margin-bottom: 1.5rem;
+  border-color: var(--color-error);
+  background-color: var(--color-error-bg);
+}
+
+.errorContent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.errorIcon {
+  color: var(--color-error);
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.errorText {
+  flex: 1;
+}
+
+.errorText p {
+  margin: 0;
+  color: var(--color-error);
+  font-weight: 500;
+}
+
+.errorClose {
+  background: none;
+  border: none;
+  color: var(--color-error);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease;
+}
+
+.errorClose:hover {
+  background-color: var(--color-error-hover);
+}
+
+.content {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.navigation {
+  position: sticky;
+  top: 1.5rem;
+}
+
+.main {
+  min-width: 0;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .content {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .navigation {
+    position: static;
+  }
+
+  .title {
+    font-size: 1.75rem;
+  }
+}
