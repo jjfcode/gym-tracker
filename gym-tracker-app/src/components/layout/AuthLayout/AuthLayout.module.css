@@ -1,0 +1,104 @@
+/* AuthLayout Component Styles */
+.layout {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-background);
+  padding: var(--space-4);
+}
+
+.container {
+  width: 100%;
+  max-width: 400px;
+}
+
+.content {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-lg);
+}
+
+.logo {
+  text-align: center;
+  margin-bottom: var(--space-8);
+}
+
+.logoText {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary-600);
+  margin: 0;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+.title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.subtitle {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: var(--line-height-relaxed);
+}
+
+.form {
+  /* Form content styles will be handled by form components */
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .layout {
+    padding: var(--space-2);
+    align-items: flex-start;
+    padding-top: var(--space-8);
+  }
+
+  .content {
+    padding: var(--space-6);
+  }
+
+  .logoText {
+    font-size: var(--font-size-xl);
+  }
+
+  .title {
+    font-size: var(--font-size-lg);
+  }
+
+  .subtitle {
+    font-size: var(--font-size-sm);
+  }
+}
+
+/* Dark theme adjustments */
+[data-theme='dark'] .content {
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+[data-theme='dark'] .logoText {
+  color: var(--color-primary-400);
+}
+
+/* System theme */
+@media (prefers-color-scheme: dark) {
+  [data-theme='system'] .content {
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+  }
+
+  [data-theme='system'] .logoText {
+    color: var(--color-primary-400);
+  }
+}

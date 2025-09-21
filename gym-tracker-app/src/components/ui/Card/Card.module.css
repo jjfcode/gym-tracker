@@ -1,0 +1,136 @@
+/* Card Component Styles */
+.card {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+  overflow: hidden;
+}
+
+/* Variants */
+.default {
+  border: 1px solid var(--color-border);
+}
+
+.outlined {
+  border: 2px solid var(--color-border);
+  background-color: transparent;
+}
+
+.elevated {
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+/* Hoverable state */
+.hoverable {
+  cursor: pointer;
+}
+
+.hoverable:hover {
+  transform: translateY(-1px);
+}
+
+.hoverable.default:hover,
+.hoverable.outlined:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.hoverable.elevated:hover {
+  box-shadow: var(--shadow-xl);
+}
+
+/* Padding variants */
+.padding-none {
+  padding: 0;
+}
+
+.padding-sm .content {
+  padding: var(--space-3);
+}
+
+.padding-md .content {
+  padding: var(--space-4);
+}
+
+.padding-lg .content {
+  padding: var(--space-6);
+}
+
+/* Header and Footer */
+.header {
+  padding: var(--space-4) var(--space-4) 0;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-4);
+}
+
+.footer {
+  padding: 0 var(--space-4) var(--space-4);
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-4);
+}
+
+.content {
+  flex: 1;
+}
+
+/* Adjust padding when header/footer present */
+.card:has(.header) .content {
+  padding-top: 0;
+}
+
+.card:has(.footer) .content {
+  padding-bottom: 0;
+}
+
+/* Small padding adjustments for header/footer */
+.padding-sm .header {
+  padding: var(--space-3) var(--space-3) 0;
+  margin-bottom: var(--space-3);
+}
+
+.padding-sm .footer {
+  padding: 0 var(--space-3) var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.padding-lg .header {
+  padding: var(--space-6) var(--space-6) 0;
+  margin-bottom: var(--space-6);
+}
+
+.padding-lg .footer {
+  padding: 0 var(--space-6) var(--space-6);
+  margin-top: var(--space-6);
+}
+
+/* Dark theme adjustments */
+[data-theme='dark'] .card {
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+[data-theme='dark'] .outlined {
+  background-color: transparent;
+}
+
+[data-theme='dark'] .header,
+[data-theme='dark'] .footer {
+  border-color: var(--color-border);
+}
+
+/* System theme */
+@media (prefers-color-scheme: dark) {
+  [data-theme='system'] .card {
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+  }
+
+  [data-theme='system'] .outlined {
+    background-color: transparent;
+  }
+
+  [data-theme='system'] .header,
+  [data-theme='system'] .footer {
+    border-color: var(--color-border);
+  }
+}
