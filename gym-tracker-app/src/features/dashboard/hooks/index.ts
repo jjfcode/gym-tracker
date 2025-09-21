@@ -5,3 +5,6 @@ export { useUpdateExerciseSet } from './useUpdateExerciseSet';
 export { useCompleteWorkout } from './useCompleteWorkout';
 export { usePreviousPerformance } from './usePreviousPerformance';
 export { useLogWeight } from './useLogWeight';
+export { useWorkoutTimer, useRestTimer } from './useWorkoutTimer';
+export { useExerciseProgress, useExerciseProgressBatch, useWorkoutProgress } from './useExerciseProgress';
+export { useWorkoutHistory, useWorkoutStats, useUpdateWorkoutCompletion } from './useWorkoutHistory';

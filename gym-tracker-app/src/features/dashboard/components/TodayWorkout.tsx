@@ -1,17 +1,31 @@
 import React from 'react';
 import { Card, Button } from '../../../components/ui';
 import ExerciseCard from './ExerciseCard';
+import WorkoutTimer from './WorkoutTimer';
 import { useTodayWorkout } from '../hooks/useTodayWorkout';
 import { useCompleteWorkout } from '../hooks/useCompleteWorkout';
+import { useUpdateWorkoutCompletion } from '../hooks/useWorkoutHistory';
 import styles from './TodayWorkout.module.css';
 
 const TodayWorkout: React.FC = () => {
   const { data: workout, isLoading, error } = useTodayWorkout();
   const completeWorkoutMutation = useCompleteWorkout();
+  const updateWorkoutCompletion = useUpdateWorkoutCompletion();
 
   const handleCompleteWorkout = () => {
     if (workout && !workout.is_completed) {
       completeWorkoutMutation.mutate(workout.id);
+    }
+  };
+
+  const handleTimerComplete = (elapsedTime: number) => {
+    if (workout && !workout.is_completed) {
+      const durationMinutes = Math.round(elapsedTime / 60);
+      updateWorkoutCompletion.mutate({
+        workoutId: workout.id,
+        isCompleted: true,
+        durationMinutes,
+      });
     }
   };
 
@@ -73,19 +87,34 @@ const TodayWorkout: React.FC = () => {
         {workout.is_completed ? (
           <div className={styles.completedBadge}>
             ✓ Completed
+            {workout.duration_minutes && (
+              <span className={styles.duration}>
+                ({workout.duration_minutes} min)
+              </span>
+            )}
           </div>
         ) : (
           <Button
             variant="primary"
             size="sm"
             onClick={handleCompleteWorkout}
-            loading={completeWorkoutMutation.isLoading}
+            loading={completeWorkoutMutation.isLoading || updateWorkoutCompletion.isLoading}
             disabled={progressPercentage < 100}
           >
             Complete Workout
           </Button>
         )}
       </div>
+
+      {!workout.is_completed && (
+        <div className={styles.timerSection}>
+          <WorkoutTimer
+            workoutId={workout.id}
+            onComplete={handleTimerComplete}
+            className={styles.workoutTimer}
+          />
+        </div>
+      )}
 
       <div className={styles.exercises}>
         {workout.exercises?.map((exercise, index) => (

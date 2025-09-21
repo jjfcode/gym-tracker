@@ -72,6 +72,28 @@
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.duration {
+  font-size: var(--font-size-xs);
+  opacity: 0.9;
+}
+
+.timerSection {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: var(--color-surface-secondary);
+  border-radius: var(--border-radius-md);
+}
+
+.workoutTimer {
+  background: transparent;
+  border: none;
+  padding: 0;
 }
 
 .exercises {

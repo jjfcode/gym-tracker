@@ -20,12 +20,23 @@
   color: var(--color-text-primary);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--spacing-xs);
 }
 
 .completedIcon {
   color: var(--color-success);
   font-size: var(--font-size-xs);
+}
+
+.autoSaveIndicator {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-normal);
+}
+
+.autoSaveIndicator.saving {
+  color: var(--color-primary);
 }
 
 .inputs {
@@ -35,8 +46,27 @@
   align-items: center;
 }
 
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
 .weightInput {
   position: relative;
+}
+
+.weightInput.error,
+.repsInput.error,
+.rpeInput.error,
+.notesInput.error {
+  border-color: var(--color-error);
+}
+
+.errorText {
+  font-size: var(--font-size-xs);
+  color: var(--color-error);
+  margin-top: var(--spacing-xs);
 }
 
 .unit {
@@ -60,11 +90,22 @@
   min-width: 60px;
 }
 
+.saveButton:disabled {
+  background: var(--color-muted);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+}
+
 .quickButton {
   font-size: var(--font-size-xs);
 }
 
-.notes {
+.quickButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.notesSection {
   margin-top: var(--spacing-xs);
 }
 
@@ -111,7 +152,7 @@
     flex-shrink: 0;
   }
   
-  .notes {
+  .notesSection {
     margin-top: 0;
     margin-left: var(--spacing-md);
     flex: 1;

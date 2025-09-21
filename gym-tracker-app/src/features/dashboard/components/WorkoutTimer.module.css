@@ -1,0 +1,82 @@
+.workoutTimer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--color-surface);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.display {
+  text-align: center;
+}
+
+.time {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font-mono);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.status {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.controls {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.startButton {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.pauseButton {
+  background: var(--color-warning);
+  color: var(--color-warning-foreground);
+}
+
+.resumeButton {
+  background: var(--color-success);
+  color: var(--color-success-foreground);
+}
+
+.completeButton {
+  color: var(--color-success);
+}
+
+.completeButton:hover {
+  background: var(--color-success-muted);
+}
+
+.resetButton {
+  color: var(--color-text-secondary);
+}
+
+.resetButton:hover {
+  background: var(--color-muted);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .workoutTimer {
+    padding: var(--spacing-sm);
+  }
+  
+  .time {
+    font-size: var(--font-size-xl);
+  }
+  
+  .controls {
+    gap: var(--spacing-xs);
+  }
+}

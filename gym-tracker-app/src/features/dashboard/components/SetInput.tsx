@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Input, Button } from '../../../components/ui';
+import { validateSetInput } from '../../../lib/validations/workout';
 import type { Database } from '../../../types/database';
 import type { Units } from '../../../store/appStore';
 import styles from './SetInput.module.css';
@@ -14,6 +15,8 @@ interface SetInputProps {
   units: Units;
   targetReps: number;
   isLoading?: boolean;
+  autoSave?: boolean;
+  autoSaveDelay?: number;
 }
 
 const SetInput: React.FC<SetInputProps> = ({
@@ -24,32 +27,101 @@ const SetInput: React.FC<SetInputProps> = ({
   units,
   targetReps,
   isLoading = false,
+  autoSave = true,
+  autoSaveDelay = 1000,
 }) => {
   const [weight, setWeight] = useState(initialData?.weight?.toString() || '');
   const [reps, setReps] = useState(initialData?.reps?.toString() || '');
   const [rpe, setRpe] = useState(initialData?.rpe?.toString() || '');
   const [notes, setNotes] = useState(initialData?.notes || '');
   const [hasChanges, setHasChanges] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSavedDataRef = useRef<string>('');
+
+  // Update initial data when it changes
   useEffect(() => {
-    const hasData = weight || reps || rpe || notes;
-    const hasInitialData = initialData?.weight || initialData?.reps || initialData?.rpe || initialData?.notes;
-    
-    if (hasData && !hasInitialData) {
-      setHasChanges(true);
-    } else if (hasInitialData) {
-      const weightChanged = weight !== (initialData?.weight?.toString() || '');
-      const repsChanged = reps !== (initialData?.reps?.toString() || '');
-      const rpeChanged = rpe !== (initialData?.rpe?.toString() || '');
-      const notesChanged = notes !== (initialData?.notes || '');
+    if (initialData) {
+      setWeight(initialData.weight?.toString() || '');
+      setReps(initialData.reps?.toString() || '');
+      setRpe(initialData.rpe?.toString() || '');
+      setNotes(initialData.notes || '');
       
-      setHasChanges(weightChanged || repsChanged || rpeChanged || notesChanged);
-    } else {
-      setHasChanges(false);
+      // Update last saved data reference
+      lastSavedDataRef.current = JSON.stringify({
+        weight: initialData.weight?.toString() || '',
+        reps: initialData.reps?.toString() || '',
+        rpe: initialData.rpe?.toString() || '',
+        notes: initialData.notes || '',
+      });
     }
-  }, [weight, reps, rpe, notes, initialData]);
+  }, [initialData]);
 
-  const handleSave = () => {
+  // Validate input data
+  const validateInputs = useCallback(() => {
+    const validation = validateSetInput({
+      weight,
+      reps,
+      rpe,
+      notes,
+    });
+
+    if (!validation.success) {
+      const errors: Record<string, string> = {};
+      validation.error.issues.forEach(issue => {
+        if (issue.path.length > 0) {
+          errors[issue.path[0] as string] = issue.message;
+        }
+      });
+      setValidationErrors(errors);
+      return false;
+    }
+
+    setValidationErrors({});
+    return true;
+  }, [weight, reps, rpe, notes]);
+
+  // Check for changes
+  useEffect(() => {
+    const currentData = JSON.stringify({ weight, reps, rpe, notes });
+    const hasDataChanged = currentData !== lastSavedDataRef.current;
+    
+    setHasChanges(hasDataChanged);
+    
+    // Validate inputs when they change
+    validateInputs();
+  }, [weight, reps, rpe, notes, validateInputs]);
+
+  // Auto-save functionality
+  useEffect(() => {
+    if (autoSave && hasChanges && Object.keys(validationErrors).length === 0) {
+      // Clear existing timeout
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+
+      // Set new timeout
+      autoSaveTimeoutRef.current = setTimeout(() => {
+        handleSave();
+      }, autoSaveDelay);
+    }
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [hasChanges, validationErrors, autoSave, autoSaveDelay]);
+
+  const handleSave = useCallback(async () => {
+    if (!validateInputs()) {
+      return;
+    }
+
+    setIsSaving(true);
+
     const updates: Partial<ExerciseSet> = {
       exercise_id: exerciseId,
       set_index: setIndex,
@@ -59,83 +131,130 @@ const SetInput: React.FC<SetInputProps> = ({
       notes: notes || null,
     };
 
-    onUpdate(updates);
-    setHasChanges(false);
-  };
+    try {
+      await onUpdate(updates);
+      
+      // Update last saved data reference
+      lastSavedDataRef.current = JSON.stringify({ weight, reps, rpe, notes });
+      setHasChanges(false);
+    } catch (error) {
+      console.error('Failed to save set data:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [exerciseId, setIndex, weight, reps, rpe, notes, onUpdate, validateInputs]);
 
-  const handleQuickComplete = () => {
+  const handleQuickComplete = useCallback(() => {
+    // Use previous weight if available and current weight is empty
     if (initialData?.weight && !weight) {
       setWeight(initialData.weight.toString());
     }
+    
+    // Use target reps if current reps is empty
     if (!reps) {
       setReps(targetReps.toString());
     }
     
-    // Auto-save after setting values
+    // Trigger immediate save after a short delay to allow state updates
     setTimeout(() => {
-      const updates: Partial<ExerciseSet> = {
-        exercise_id: exerciseId,
-        set_index: setIndex,
-        weight: weight || initialData?.weight || null,
-        reps: reps || targetReps,
-        rpe: rpe ? parseFloat(rpe) : null,
-        notes: notes || null,
-      };
-      onUpdate(updates);
-      setHasChanges(false);
+      handleSave();
     }, 100);
-  };
+  }, [initialData?.weight, weight, reps, targetReps, handleSave]);
+
+  const handleInputChange = useCallback((field: string, value: string) => {
+    switch (field) {
+      case 'weight':
+        setWeight(value);
+        break;
+      case 'reps':
+        setReps(value);
+        break;
+      case 'rpe':
+        setRpe(value);
+        break;
+      case 'notes':
+        setNotes(value);
+        break;
+    }
+  }, []);
 
   const isCompleted = (weight && reps) || (initialData?.weight && initialData?.reps);
   const weightUnit = units === 'metric' ? 'kg' : 'lbs';
+  const showSaveButton = hasChanges && !autoSave;
+  const showAutoSaveIndicator = autoSave && (hasChanges || isSaving);
 
   return (
     <div className={`${styles.setInput} ${isCompleted ? styles.completed : ''}`}>
       <div className={styles.setLabel}>
-        Set {setIndex}
+        <span>Set {setIndex}</span>
         {isCompleted && <span className={styles.completedIcon}>✓</span>}
+        {showAutoSaveIndicator && (
+          <span className={`${styles.autoSaveIndicator} ${isSaving ? styles.saving : ''}`}>
+            {isSaving ? 'Saving...' : 'Auto-save'}
+          </span>
+        )}
       </div>
       
       <div className={styles.inputs}>
-        <Input
-          type="number"
-          placeholder="Weight"
-          value={weight}
-          onChange={(e) => setWeight(e.target.value)}
-          size="sm"
-          rightIcon={<span className={styles.unit}>{weightUnit}</span>}
-          className={styles.weightInput}
-        />
+        <div className={styles.inputGroup}>
+          <Input
+            type="number"
+            placeholder="Weight"
+            value={weight}
+            onChange={(e) => handleInputChange('weight', e.target.value)}
+            size="sm"
+            rightIcon={<span className={styles.unit}>{weightUnit}</span>}
+            className={`${styles.weightInput} ${validationErrors.weight ? styles.error : ''}`}
+            min="0"
+            step="0.5"
+          />
+          {validationErrors.weight && (
+            <span className={styles.errorText}>{validationErrors.weight}</span>
+          )}
+        </div>
         
-        <Input
-          type="number"
-          placeholder="Reps"
-          value={reps}
-          onChange={(e) => setReps(e.target.value)}
-          size="sm"
-          className={styles.repsInput}
-        />
+        <div className={styles.inputGroup}>
+          <Input
+            type="number"
+            placeholder="Reps"
+            value={reps}
+            onChange={(e) => handleInputChange('reps', e.target.value)}
+            size="sm"
+            className={`${styles.repsInput} ${validationErrors.reps ? styles.error : ''}`}
+            min="1"
+            max="100"
+          />
+          {validationErrors.reps && (
+            <span className={styles.errorText}>{validationErrors.reps}</span>
+          )}
+        </div>
         
-        <Input
-          type="number"
-          placeholder="RPE"
-          value={rpe}
-          onChange={(e) => setRpe(e.target.value)}
-          size="sm"
-          min="1"
-          max="10"
-          step="0.5"
-          className={styles.rpeInput}
-        />
+        <div className={styles.inputGroup}>
+          <Input
+            type="number"
+            placeholder="RPE"
+            value={rpe}
+            onChange={(e) => handleInputChange('rpe', e.target.value)}
+            size="sm"
+            min="1"
+            max="10"
+            step="0.5"
+            className={`${styles.rpeInput} ${validationErrors.rpe ? styles.error : ''}`}
+          />
+          {validationErrors.rpe && (
+            <span className={styles.errorText}>{validationErrors.rpe}</span>
+          )}
+        </div>
       </div>
 
       <div className={styles.actions}>
-        {hasChanges && (
+        {showSaveButton && (
           <Button
             variant="primary"
             size="sm"
             onClick={handleSave}
-            loading={isLoading}
+            loading={isLoading || isSaving}
+            disabled={Object.keys(validationErrors).length > 0}
             className={styles.saveButton}
           >
             Save
@@ -147,6 +266,7 @@ const SetInput: React.FC<SetInputProps> = ({
             variant="ghost"
             size="sm"
             onClick={handleQuickComplete}
+            disabled={isLoading || isSaving}
             className={styles.quickButton}
           >
             Quick Complete
@@ -154,18 +274,20 @@ const SetInput: React.FC<SetInputProps> = ({
         )}
       </div>
 
-      {notes && (
-        <div className={styles.notes}>
-          <Input
-            type="text"
-            placeholder="Notes (optional)"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            size="sm"
-            className={styles.notesInput}
-          />
-        </div>
-      )}
+      <div className={styles.notesSection}>
+        <Input
+          type="text"
+          placeholder="Notes (optional)"
+          value={notes}
+          onChange={(e) => handleInputChange('notes', e.target.value)}
+          size="sm"
+          className={`${styles.notesInput} ${validationErrors.notes ? styles.error : ''}`}
+          maxLength={500}
+        />
+        {validationErrors.notes && (
+          <span className={styles.errorText}>{validationErrors.notes}</span>
+        )}
+      </div>
     </div>
   );
 };

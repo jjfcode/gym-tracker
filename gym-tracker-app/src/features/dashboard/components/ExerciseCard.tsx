@@ -29,21 +29,28 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
   const { data: sets = [], isLoading } = useExerciseSets(exercise.id);
   const updateSetMutation = useUpdateExerciseSet();
 
-  const handleSetUpdate = (setIndex: number, updates: Partial<Database['public']['Tables']['exercise_sets']['Row']>) => {
+  const handleSetUpdate = async (updates: Partial<Database['public']['Tables']['exercise_sets']['Row']>) => {
+    const setIndex = updates.set_index!;
     const existingSet = sets.find(set => set.set_index === setIndex);
     
-    if (existingSet) {
-      updateSetMutation.mutate({
-        setId: existingSet.id,
-        updates,
-      });
-    } else {
-      // Create new set
-      updateSetMutation.mutate({
-        exerciseId: exercise.id,
-        setIndex,
-        updates,
-      });
+    try {
+      if (existingSet) {
+        await updateSetMutation.mutateAsync({
+          setId: existingSet.id,
+          updates,
+          optimistic: true,
+        });
+      } else {
+        // Create new set
+        await updateSetMutation.mutateAsync({
+          exerciseId: exercise.id,
+          setIndex,
+          updates,
+          optimistic: true,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to update set:', error);
     }
   };
 
@@ -106,10 +113,12 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
               setIndex={setIndex}
               exerciseId={exercise.id}
               initialData={existingSet}
-              onUpdate={(updates) => handleSetUpdate(setIndex, updates)}
+              onUpdate={handleSetUpdate}
               units={units}
               targetReps={exercise.target_reps}
               isLoading={updateSetMutation.isLoading}
+              autoSave={true}
+              autoSaveDelay={1000}
             />
           );
         })}
