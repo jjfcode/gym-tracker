@@ -8,3 +8,6 @@ export * from './useTranslation';
 
 // PWA hooks
 export * from './useOfflineData';
+
+// Error handling hooks
+export * from './useErrorHandler';
