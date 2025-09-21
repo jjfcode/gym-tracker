@@ -23,3 +23,9 @@ export { ThemeToggle } from './ThemeToggle';
 
 // Internationalization Components
 export { LanguageSwitcher } from './LanguageSwitcher';
+
+// PWA Components
+export { OfflineIndicator } from './OfflineIndicator';
+export { InstallPrompt } from './InstallPrompt';
+export { UpdatePrompt } from './UpdatePrompt';
+export { PWASettings } from './PWASettings';

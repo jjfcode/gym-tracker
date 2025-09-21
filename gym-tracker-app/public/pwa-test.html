@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Functionality Test - Gym Tracker</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 2rem 0;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-result {
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            border-radius: 4px;
+        }
+        .pass { background: #d4edda; color: #155724; }
+        .fail { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0.25rem;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <h1>🔧 PWA Functionality Test</h1>
+    <p>This page tests the Progressive Web App features of Gym Tracker.</p>
+
+    <div class="test-section">
+        <h2>📱 Basic PWA Features</h2>
+        <div id="basic-tests"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 Service Worker</h2>
+        <div id="sw-tests"></div>
+        <button onclick="testServiceWorker()">Test Service Worker</button>
+    </div>
+
+    <div class="test-section">
+        <h2>💾 Offline Storage</h2>
+        <div id="storage-tests"></div>
+        <button onclick="testOfflineStorage()">Test Offline Storage</button>
+    </div>
+
+    <div class="test-section">
+        <h2>🔄 Background Sync</h2>
+        <div id="sync-tests"></div>
+        <button onclick="testBackgroundSync()">Test Background Sync</button>
+    </div>
+
+    <div class="test-section">
+        <h2>📲 Install Prompt</h2>
+        <div id="install-tests"></div>
+        <button onclick="testInstallPrompt()">Test Install Prompt</button>
+    </div>
+
+    <div class="test-section">
+        <h2>🔔 Notifications</h2>
+        <div id="notification-tests"></div>
+        <button onclick="testNotifications()">Test Notifications</button>
+    </div>
+
+    <script>
+        function addResult(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            container.appendChild(div);
+        }
+
+        function clearResults(containerId) {
+            document.getElementById(containerId).innerHTML = '';
+        }
+
+        // Basic PWA Features Test
+        function testBasicFeatures() {
+            clearResults('basic-tests');
+            
+            // Test manifest
+            const manifestLink = document.querySelector('link[rel="manifest"]');
+            if (manifestLink) {
+                addResult('basic-tests', '✅ Web App Manifest detected', 'pass');
+            } else {
+                addResult('basic-tests', '❌ Web App Manifest not found', 'fail');
+            }
+
+            // Test viewport meta tag
+            const viewport = document.querySelector('meta[name="viewport"]');
+            if (viewport) {
+                addResult('basic-tests', '✅ Viewport meta tag present', 'pass');
+            } else {
+                addResult('basic-tests', '❌ Viewport meta tag missing', 'fail');
+            }
+
+            // Test theme color
+            const themeColor = document.querySelector('meta[name="theme-color"]');
+            if (themeColor) {
+                addResult('basic-tests', '✅ Theme color meta tag present', 'pass');
+            } else {
+                addResult('basic-tests', '❌ Theme color meta tag missing', 'fail');
+            }
+
+            // Test HTTPS
+            if (location.protocol === 'https:' || location.hostname === 'localhost') {
+                addResult('basic-tests', '✅ Served over HTTPS or localhost', 'pass');
+            } else {
+                addResult('basic-tests', '❌ Not served over HTTPS', 'fail');
+            }
+        }
+
+        // Service Worker Test
+        async function testServiceWorker() {
+            clearResults('sw-tests');
+            
+            if ('serviceWorker' in navigator) {
+                addResult('sw-tests', '✅ Service Worker API supported', 'pass');
+                
+                try {
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    if (registration) {
+                        addResult('sw-tests', '✅ Service Worker registered', 'pass');
+                        addResult('sw-tests', `📍 Scope: ${registration.scope}`, 'info');
+                        
+                        if (registration.active) {
+                            addResult('sw-tests', '✅ Service Worker active', 'pass');
+                        } else {
+                            addResult('sw-tests', '⏳ Service Worker not active yet', 'info');
+                        }
+                    } else {
+                        addResult('sw-tests', '❌ No Service Worker registration found', 'fail');
+                    }
+                } catch (error) {
+                    addResult('sw-tests', `❌ Service Worker error: ${error.message}`, 'fail');
+                }
+            } else {
+                addResult('sw-tests', '❌ Service Worker not supported', 'fail');
+            }
+        }
+
+        // Offline Storage Test
+        async function testOfflineStorage() {
+            clearResults('storage-tests');
+            
+            // Test IndexedDB
+            if ('indexedDB' in window) {
+                addResult('storage-tests', '✅ IndexedDB supported', 'pass');
+                
+                try {
+                    // Test opening a database
+                    const request = indexedDB.open('pwa-test-db', 1);
+                    request.onsuccess = () => {
+                        addResult('storage-tests', '✅ IndexedDB database opened successfully', 'pass');
+                        request.result.close();
+                        indexedDB.deleteDatabase('pwa-test-db');
+                    };
+                    request.onerror = () => {
+                        addResult('storage-tests', '❌ Failed to open IndexedDB database', 'fail');
+                    };
+                } catch (error) {
+                    addResult('storage-tests', `❌ IndexedDB error: ${error.message}`, 'fail');
+                }
+            } else {
+                addResult('storage-tests', '❌ IndexedDB not supported', 'fail');
+            }
+
+            // Test localStorage
+            if ('localStorage' in window) {
+                try {
+                    localStorage.setItem('pwa-test', 'test-value');
+                    const value = localStorage.getItem('pwa-test');
+                    if (value === 'test-value') {
+                        addResult('storage-tests', '✅ localStorage working', 'pass');
+                        localStorage.removeItem('pwa-test');
+                    } else {
+                        addResult('storage-tests', '❌ localStorage not working correctly', 'fail');
+                    }
+                } catch (error) {
+                    addResult('storage-tests', `❌ localStorage error: ${error.message}`, 'fail');
+                }
+            } else {
+                addResult('storage-tests', '❌ localStorage not supported', 'fail');
+            }
+        }
+
+        // Background Sync Test
+        async function testBackgroundSync() {
+            clearResults('sync-tests');
+            
+            if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
+                addResult('sync-tests', '✅ Background Sync API supported', 'pass');
+                
+                try {
+                    const registration = await navigator.serviceWorker.ready;
+                    await registration.sync.register('test-sync');
+                    addResult('sync-tests', '✅ Background sync registered successfully', 'pass');
+                } catch (error) {
+                    addResult('sync-tests', `❌ Background sync error: ${error.message}`, 'fail');
+                }
+            } else {
+                addResult('sync-tests', '❌ Background Sync not supported', 'fail');
+            }
+        }
+
+        // Install Prompt Test
+        function testInstallPrompt() {
+            clearResults('install-tests');
+            
+            // Check if app is already installed
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                addResult('install-tests', '✅ App is installed (standalone mode)', 'pass');
+                return;
+            }
+
+            // Check for iOS Safari standalone mode
+            if (window.navigator.standalone === true) {
+                addResult('install-tests', '✅ App is installed (iOS standalone)', 'pass');
+                return;
+            }
+
+            addResult('install-tests', '📱 App not installed - install prompt should appear when criteria are met', 'info');
+            addResult('install-tests', '💡 Install criteria: HTTPS, manifest, service worker, user engagement', 'info');
+        }
+
+        // Notifications Test
+        async function testNotifications() {
+            clearResults('notification-tests');
+            
+            if ('Notification' in window) {
+                addResult('notification-tests', '✅ Notifications API supported', 'pass');
+                
+                const permission = Notification.permission;
+                addResult('notification-tests', `📋 Current permission: ${permission}`, 'info');
+                
+                if (permission === 'default') {
+                    try {
+                        const newPermission = await Notification.requestPermission();
+                        addResult('notification-tests', `📋 New permission: ${newPermission}`, 'info');
+                        
+                        if (newPermission === 'granted') {
+                            new Notification('PWA Test', {
+                                body: 'Notifications are working!',
+                                icon: '/icons/icon-192x192.png'
+                            });
+                            addResult('notification-tests', '✅ Test notification sent', 'pass');
+                        }
+                    } catch (error) {
+                        addResult('notification-tests', `❌ Notification error: ${error.message}`, 'fail');
+                    }
+                } else if (permission === 'granted') {
+                    new Notification('PWA Test', {
+                        body: 'Notifications are working!',
+                        icon: '/icons/icon-192x192.png'
+                    });
+                    addResult('notification-tests', '✅ Test notification sent', 'pass');
+                } else {
+                    addResult('notification-tests', '❌ Notifications denied', 'fail');
+                }
+            } else {
+                addResult('notification-tests', '❌ Notifications not supported', 'fail');
+            }
+        }
+
+        // Run basic tests on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            testBasicFeatures();
+        });
+    </script>
+</body>
+</html>
