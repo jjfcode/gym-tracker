@@ -82,4 +82,67 @@ export default defineConfig({
       generateScopedName: '[name]__[local]___[hash:base64:5]',
     },
   },
+  build: {
+    // Bundle optimization
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks
+          'react-vendor': ['react', 'react-dom'],
+          'router-vendor': ['react-router-dom'],
+          'query-vendor': ['@tanstack/react-query'],
+          'supabase-vendor': ['@supabase/supabase-js'],
+          'chart-vendor': ['recharts'],
+          'form-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],
+          'i18n-vendor': ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
+          
+          // Feature chunks
+          'auth-feature': [
+            './src/features/auth/index.ts',
+            './src/features/auth/AuthContext.tsx',
+          ],
+          'dashboard-feature': [
+            './src/features/dashboard/index.ts',
+          ],
+          'workouts-feature': [
+            './src/features/workouts/index.ts',
+          ],
+          'progress-feature': [
+            './src/features/progress/index.ts',
+          ],
+          'planning-feature': [
+            './src/features/planning/index.ts',
+          ],
+          'exercises-feature': [
+            './src/features/exercises/index.ts',
+          ],
+          'settings-feature': [
+            './src/features/settings/index.ts',
+          ],
+        },
+      },
+    },
+    // Optimize chunk size
+    chunkSizeWarningLimit: 1000,
+    // Enable source maps for production debugging
+    sourcemap: true,
+    // Minification
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
+  },
+  // Performance optimizations
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      '@tanstack/react-query',
+      '@supabase/supabase-js',
+    ],
+  },
 })
