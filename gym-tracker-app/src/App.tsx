@@ -29,6 +29,7 @@ const OnboardingPlaceholder = () => (
 import Dashboard from './features/dashboard/components/Dashboard';
 import { ProgressPage } from './features/progress';
 import ProgressDemo from './features/progress/components/ProgressDemo';
+import { PlanningView } from './features/planning';
 import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
@@ -42,6 +43,11 @@ function App() {
           <Route path="/progress" element={
             <ErrorBoundary>
               <ProgressDemo />
+            </ErrorBoundary>
+          } />
+          <Route path="/planning" element={
+            <ErrorBoundary>
+              <PlanningView />
             </ErrorBoundary>
           } />
           <Route path="*" element={<Navigate to="/" replace />} />

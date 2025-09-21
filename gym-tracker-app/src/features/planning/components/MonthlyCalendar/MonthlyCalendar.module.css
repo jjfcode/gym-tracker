@@ -1,0 +1,335 @@
+/* Monthly Calendar Styles */
+
+.monthlyCalendar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.navigation {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.navButton:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-hover);
+}
+
+.navButton:active {
+  transform: scale(0.95);
+}
+
+.monthYear {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  min-width: 200px;
+  text-align: center;
+}
+
+.viewToggle {
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+}
+
+.viewButton {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: none;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.viewButton:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.viewButton.active {
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+}
+
+.monthGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: var(--color-border);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+}
+
+.dayHeader {
+  background: var(--color-surface-secondary);
+  padding: var(--spacing-sm);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+}
+
+.dayCell {
+  background: var(--color-surface);
+  min-height: 100px;
+  padding: var(--spacing-xs);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.dayCell:hover {
+  background: var(--color-surface-hover);
+}
+
+.dayCell.today {
+  background: var(--color-primary-light);
+}
+
+.dayCell.today:hover {
+  background: var(--color-primary-light);
+}
+
+.dayCell.otherMonth {
+  background: var(--color-surface-tertiary);
+  color: var(--color-text-tertiary);
+}
+
+.dayCell.otherMonth:hover {
+  background: var(--color-surface-secondary);
+}
+
+.dayNumber {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xs);
+  line-height: 1;
+}
+
+.dayCell.today .dayNumber {
+  color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-xs);
+}
+
+.dayCell.otherMonth .dayNumber {
+  color: var(--color-text-tertiary);
+}
+
+.workoutDots {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+.workoutDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.workoutDot.scheduled {
+  background: var(--color-info);
+}
+
+.workoutDot.completed {
+  background: var(--color-success);
+}
+
+.workoutDot.rest {
+  background: var(--color-text-tertiary);
+}
+
+.workoutPreview {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  z-index: 10;
+  box-shadow: var(--shadow-md);
+  display: none;
+}
+
+.dayCell:hover .workoutPreview {
+  display: block;
+}
+
+.workoutTitle {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+
+.workoutMeta {
+  color: var(--color-text-secondary);
+}
+
+.weekRow {
+  display: contents;
+}
+
+.todayButton {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--border-radius-md);
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all 0.2s ease;
+}
+
+.todayButton:hover {
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+}
+
+.monthStats {
+  display: flex;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-sm);
+  background: var(--color-surface-secondary);
+  border-radius: var(--border-radius-md);
+  margin-top: var(--spacing-sm);
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.statValue {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.statLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    align-items: stretch;
+  }
+
+  .navigation {
+    justify-content: space-between;
+  }
+
+  .monthYear {
+    min-width: auto;
+    font-size: var(--font-size-lg);
+  }
+
+  .dayCell {
+    min-height: 60px;
+    padding: 2px;
+  }
+
+  .dayNumber {
+    font-size: var(--font-size-xs);
+  }
+
+  .workoutDots {
+    gap: 1px;
+  }
+
+  .workoutDot {
+    width: 4px;
+    height: 4px;
+  }
+
+  .monthStats {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .statItem {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 480px) {
+  .dayHeader {
+    padding: var(--spacing-xs);
+    font-size: var(--font-size-xs);
+  }
+
+  .dayCell {
+    min-height: 40px;
+  }
+
+  .dayNumber {
+    font-size: var(--font-size-xs);
+    margin-bottom: 1px;
+  }
+
+  .dayCell.today .dayNumber {
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+  }
+
+  .workoutDot {
+    width: 3px;
+    height: 3px;
+  }
+}

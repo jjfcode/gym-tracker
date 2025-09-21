@@ -84,7 +84,7 @@
   - Add weight goal setting and progress tracking (optional)
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6_
 
-- [ ] 10. Calendar and Planning Views
+- [x] 10. Calendar and Planning Views
   - Create WeeklyCalendar component with horizontal day navigation
   - Build MonthlyCalendar component with grid layout and workout indicators
   - Implement calendar navigation between weeks and months
