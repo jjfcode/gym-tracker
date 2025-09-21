@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Input } from '../../../components';
 import type { OnboardingStepProps } from '../types';
-import { useAppStore } from '../../../store';
+// import { useAppStore } from '../../../store';
 import styles from './WeightInputStep.module.css';
 
 export const WeightInputStep: React.FC<OnboardingStepProps> = ({
@@ -11,15 +11,15 @@ export const WeightInputStep: React.FC<OnboardingStepProps> = ({
   isFirstStep,
   isLastStep
 }) => {
-  const { units: globalUnits, setUnits } = useAppStore();
+  // const { units: globalUnits, setUnits } = useAppStore();
   const [weight, setWeight] = useState(data.weight?.toString() || '');
-  const [units, setLocalUnits] = useState<'metric' | 'imperial'>(data.units || globalUnits);
+  const [units, setLocalUnits] = useState<'metric' | 'imperial'>(data.units || 'imperial');
   const [error, setError] = useState('');
 
   // Update global units when local units change
-  useEffect(() => {
-    setUnits(units);
-  }, [units, setUnits]);
+  // useEffect(() => {
+  //   setUnits(units);
+  // }, [units, setUnits]);
 
   const validateWeight = (value: string): boolean => {
     const numValue = parseFloat(value);

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Button } from '../../../components';
 import type { OnboardingStepProps } from '../types';
 import { getWorkoutTemplate } from '../data/workoutTemplates';
-import { useAppStore } from '../../../store';
+// import { useAppStore } from '../../../store';
 import styles from './PlanPreviewStep.module.css';
 
 export const PlanPreviewStep: React.FC<OnboardingStepProps> = ({
@@ -12,7 +12,8 @@ export const PlanPreviewStep: React.FC<OnboardingStepProps> = ({
   isFirstStep,
   isLastStep
 }) => {
-  const { language } = useAppStore();
+  // const { language } = useAppStore();
+  const language = 'en'; // Default to English for now
   
   const template = useMemo(() => {
     if (!data.trainingFrequency) return null;
