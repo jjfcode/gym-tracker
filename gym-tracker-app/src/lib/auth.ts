@@ -1,5 +1,7 @@
 import type { AuthError } from '@supabase/supabase-js';
 import { supabase } from './supabase';
+import { SecurityService } from './security';
+import { sanitizeInput } from './input-sanitization';
 import type {
   SignInFormData,
   SignUpFormData,
@@ -13,60 +15,141 @@ import type { UserProfile } from '../types/common';
 export class AuthService {
   // Sign in with email and password
   static async signIn(data: SignInFormData): Promise<AuthUser> {
-    const { data: authData, error } = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password: data.password,
-    });
+    // Sanitize input data
+    const sanitizedEmail = sanitizeInput(data.email, 'email') as string;
+    const rateLimitKey = sanitizedEmail;
 
-    if (error) {
-      throw new Error(this.getErrorMessage(error));
+    // Check rate limiting for login attempts
+    if (!SecurityService.checkRateLimit(rateLimitKey, 'login')) {
+      await SecurityService.logSecurityEvent('rate_limit_exceeded', {
+        email: sanitizedEmail,
+        action: 'sign_in',
+      }, 'medium');
+      throw new Error('Too many login attempts. Please try again later.');
     }
 
-    if (!authData.user) {
-      throw new Error('Authentication failed');
-    }
+    try {
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email: sanitizedEmail,
+        password: data.password,
+      });
 
-    // Fetch user profile
-    const profile = await this.fetchUserProfile(authData.user.id);
-    
-    return {
-      ...authData.user,
-      profile,
-    };
+      if (error) {
+        // Log failed login attempt
+        await SecurityService.logSecurityEvent('failed_login', {
+          email: sanitizedEmail,
+          error: error.message,
+          timestamp: new Date().toISOString(),
+        }, 'medium');
+        throw new Error(this.getErrorMessage(error));
+      }
+
+      if (!authData.user) {
+        await SecurityService.logSecurityEvent('failed_login', {
+          email: sanitizedEmail,
+          error: 'No user returned from authentication',
+        }, 'medium');
+        throw new Error('Authentication failed');
+      }
+
+      // Check for suspicious activity
+      const isSuspicious = await SecurityService.checkSuspiciousActivity(authData.user.id);
+      if (isSuspicious) {
+        await SecurityService.logSecurityEvent('suspicious_activity', {
+          userId: authData.user.id,
+          email: sanitizedEmail,
+          action: 'sign_in_suspicious',
+        }, 'high');
+        // Still allow login but log the event
+      }
+
+      // Fetch user profile
+      const profile = await this.fetchUserProfile(authData.user.id);
+      
+      return {
+        ...authData.user,
+        profile,
+      };
+    } catch (error) {
+      // Ensure error is logged and re-throw
+      if (error instanceof Error && !error.message.includes('Too many login attempts')) {
+        await SecurityService.logSecurityEvent('failed_login', {
+          email: sanitizedEmail,
+          error: error.message,
+        }, 'medium');
+      }
+      throw error;
+    }
   }
 
   // Sign up with email and password
   static async signUp(data: SignUpFormData): Promise<AuthUser> {
-    const { data: authData, error } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        data: {
-          display_name: data.displayName || '',
+    // Sanitize input data
+    const sanitizedEmail = sanitizeInput(data.email, 'email') as string;
+    const sanitizedDisplayName = sanitizeInput(data.displayName || '', 'text', { maxLength: 50 }) as string;
+    
+    // Validate password strength
+    const passwordValidation = SecurityService.validatePassword(data.password);
+    if (!passwordValidation.isValid) {
+      throw new Error(passwordValidation.errors[0]);
+    }
+
+    // Check rate limiting for registration attempts
+    const rateLimitKey = sanitizedEmail;
+    if (!SecurityService.checkRateLimit(rateLimitKey, 'login')) {
+      await SecurityService.logSecurityEvent('rate_limit_exceeded', {
+        email: sanitizedEmail,
+        action: 'sign_up',
+      }, 'medium');
+      throw new Error('Too many registration attempts. Please try again later.');
+    }
+
+    try {
+      const { data: authData, error } = await supabase.auth.signUp({
+        email: sanitizedEmail,
+        password: data.password,
+        options: {
+          data: {
+            display_name: sanitizedDisplayName,
+          },
         },
-      },
-    });
+      });
 
-    if (error) {
-      throw new Error(this.getErrorMessage(error));
+      if (error) {
+        await SecurityService.logSecurityEvent('failed_login', {
+          email: sanitizedEmail,
+          action: 'sign_up',
+          error: error.message,
+        }, 'low');
+        throw new Error(this.getErrorMessage(error));
+      }
+
+      if (!authData.user) {
+        throw new Error('Registration failed');
+      }
+
+      // Create user profile with sanitized data
+      const profile = await this.createUserProfile(authData.user.id, {
+        display_name: sanitizedDisplayName,
+        locale: 'en',
+        units: 'imperial',
+        theme: 'system',
+      });
+
+      return {
+        ...authData.user,
+        profile,
+      };
+    } catch (error) {
+      if (error instanceof Error && !error.message.includes('Too many registration attempts')) {
+        await SecurityService.logSecurityEvent('failed_login', {
+          email: sanitizedEmail,
+          action: 'sign_up',
+          error: error.message,
+        }, 'low');
+      }
+      throw error;
     }
-
-    if (!authData.user) {
-      throw new Error('Registration failed');
-    }
-
-    // Create user profile
-    const profile = await this.createUserProfile(authData.user.id, {
-      display_name: data.displayName || '',
-      locale: 'en',
-      units: 'imperial',
-      theme: 'system',
-    });
-
-    return {
-      ...authData.user,
-      profile,
-    };
   }
 
   // Sign out
@@ -79,23 +162,80 @@ export class AuthService {
 
   // Reset password
   static async resetPassword(data: ResetPasswordFormData): Promise<void> {
-    const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
+    // Sanitize email input
+    const sanitizedEmail = sanitizeInput(data.email, 'email') as string;
+    
+    // Check rate limiting for password reset attempts
+    if (!SecurityService.checkRateLimit(sanitizedEmail, 'passwordReset')) {
+      await SecurityService.logSecurityEvent('rate_limit_exceeded', {
+        email: sanitizedEmail,
+        action: 'password_reset',
+      }, 'medium');
+      throw new Error('Too many password reset attempts. Please try again later.');
+    }
 
-    if (error) {
-      throw new Error(this.getErrorMessage(error));
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(sanitizedEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        await SecurityService.logSecurityEvent('failed_login', {
+          email: sanitizedEmail,
+          action: 'password_reset',
+          error: error.message,
+        }, 'low');
+        throw new Error(this.getErrorMessage(error));
+      }
+
+      // Log successful password reset request
+      await SecurityService.logSecurityEvent('suspicious_activity', {
+        email: sanitizedEmail,
+        action: 'password_reset_requested',
+      }, 'low');
+    } catch (error) {
+      if (error instanceof Error && !error.message.includes('Too many password reset attempts')) {
+        await SecurityService.logSecurityEvent('failed_login', {
+          email: sanitizedEmail,
+          action: 'password_reset',
+          error: error.message,
+        }, 'low');
+      }
+      throw error;
     }
   }
 
   // Update password
   static async updatePassword(data: UpdatePasswordFormData): Promise<void> {
-    const { error } = await supabase.auth.updateUser({
-      password: data.password,
-    });
+    // Validate password strength
+    const passwordValidation = SecurityService.validatePassword(data.password);
+    if (!passwordValidation.isValid) {
+      throw new Error(passwordValidation.errors[0]);
+    }
 
-    if (error) {
-      throw new Error(this.getErrorMessage(error));
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: data.password,
+      });
+
+      if (error) {
+        const { data: { user } } = await supabase.auth.getUser();
+        await SecurityService.logSecurityEvent('failed_login', {
+          userId: user?.id,
+          action: 'password_update',
+          error: error.message,
+        }, 'medium');
+        throw new Error(this.getErrorMessage(error));
+      }
+
+      // Log successful password update
+      const { data: { user } } = await supabase.auth.getUser();
+      await SecurityService.logSecurityEvent('suspicious_activity', {
+        userId: user?.id,
+        action: 'password_updated',
+      }, 'low');
+    } catch (error) {
+      throw error;
     }
   }
 

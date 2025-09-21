@@ -3,10 +3,53 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
+// Security headers plugin
+function securityHeaders() {
+  return {
+    name: 'security-headers',
+    configureServer(server: any) {
+      server.middlewares.use((req: any, res: any, next: any) => {
+        // Security headers
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('X-Frame-Options', 'DENY');
+        res.setHeader('X-XSS-Protection', '1; mode=block');
+        res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+        res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+        
+        // Content Security Policy
+        const csp = [
+          "default-src 'self'",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co",
+          "style-src 'self' 'unsafe-inline'",
+          "img-src 'self' data: https: blob:",
+          "font-src 'self' data:",
+          "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+          "media-src 'self'",
+          "object-src 'none'",
+          "base-uri 'self'",
+          "form-action 'self'",
+          "frame-ancestors 'none'",
+          "upgrade-insecure-requests"
+        ].join('; ');
+        
+        res.setHeader('Content-Security-Policy', csp);
+        
+        // HSTS (only in production)
+        if (process.env.NODE_ENV === 'production') {
+          res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+        }
+        
+        next();
+      });
+    }
+  };
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
+    securityHeaders(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],

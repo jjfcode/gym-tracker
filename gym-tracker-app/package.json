@@ -24,7 +24,12 @@
     "analyze": "npm run build && npx vite-bundle-analyzer dist",
     "lighthouse": "lhci autorun",
     "perf:audit": "npm run build && npm run lighthouse",
-    "db:optimize": "tsx scripts/optimize-database.ts"
+    "db:optimize": "tsx scripts/optimize-database.ts",
+    "security:audit": "npm audit --audit-level moderate",
+    "security:fix": "npm audit fix",
+    "security:assessment": "tsx scripts/security-assessment.ts",
+    "security:test": "npm run test -- --run src/lib/__tests__/security.test.ts",
+    "security:full": "npm run security:audit && npm run security:assessment && npm run security:test"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

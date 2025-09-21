@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider } from './features/auth/AuthContext';
 import { performanceMonitor } from './lib/performance-monitor';
+import { SecurityService } from './lib/security';
 import './lib/i18n'; // Initialize i18n
 import './styles/globals.css';
 import App from './App.tsx';
@@ -46,6 +47,11 @@ const queryClient = new QueryClient({
       retryDelay: 1000,
     },
   },
+});
+
+// Initialize security service
+SecurityService.initialize().catch(error => {
+  console.error('Failed to initialize security service:', error);
 });
 
 // Initialize performance monitoring
