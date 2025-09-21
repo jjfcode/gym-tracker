@@ -11,6 +11,12 @@ export type { CardVariant, CardPadding } from './Card';
 export { default as Modal } from './Modal';
 export type { ModalSize } from './Modal';
 
+export { default as Select } from './Select';
+export type { SelectProps, SelectOption } from './Select';
+
+export { default as Textarea } from './Textarea';
+export type { TextareaProps } from './Textarea';
+
 // Theme Components
 export { ThemeProvider } from './ThemeProvider';
 export { ThemeToggle } from './ThemeToggle';

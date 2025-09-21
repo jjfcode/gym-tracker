@@ -61,6 +61,21 @@
   --color-error-background: var(--color-error-50);
   --color-error-foreground: var(--color-error-600);
   --color-warning: var(--color-warning-500);
+  --color-info: var(--color-primary-500);
+  
+  /* Alpha colors for backgrounds */
+  --color-primary-alpha: rgba(6, 132, 199, 0.1);
+  --color-success-alpha: rgba(34, 197, 94, 0.1);
+  --color-error-alpha: rgba(239, 68, 68, 0.1);
+  --color-warning-alpha: rgba(245, 158, 11, 0.1);
+  --color-info-alpha: rgba(14, 165, 233, 0.1);
+  
+  /* Additional semantic colors */
+  --color-text: var(--color-text-primary);
+  --color-text-disabled: var(--color-gray-400);
+  --color-surface-hover: var(--color-gray-50);
+  --color-surface-disabled: var(--color-gray-100);
+  --color-border-hover: var(--color-gray-300);
 
   /* Typography */
   --font-family-sans:
@@ -164,6 +179,11 @@
   --color-border: var(--color-gray-700);
   --color-border-focus: var(--color-primary-400);
   --color-secondary: var(--color-gray-400);
+  --color-text: var(--color-text-primary);
+  --color-text-disabled: var(--color-gray-600);
+  --color-surface-hover: var(--color-gray-700);
+  --color-surface-disabled: var(--color-gray-700);
+  --color-border-hover: var(--color-gray-600);
 }
 
 /* System Theme Preference */
@@ -181,5 +201,10 @@
     --color-border: var(--color-gray-700);
     --color-border-focus: var(--color-primary-400);
     --color-secondary: var(--color-gray-400);
+    --color-text: var(--color-text-primary);
+    --color-text-disabled: var(--color-gray-600);
+    --color-surface-hover: var(--color-gray-700);
+    --color-surface-disabled: var(--color-gray-700);
+    --color-border-hover: var(--color-gray-600);
   }
 }

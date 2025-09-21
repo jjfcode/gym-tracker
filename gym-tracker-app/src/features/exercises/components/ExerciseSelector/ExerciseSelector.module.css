@@ -1,0 +1,160 @@
+.exerciseSelector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  height: 100%;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.selectionCount {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-medium);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-surface-secondary);
+  border-radius: var(--border-radius-sm);
+}
+
+.closeButton {
+  font-size: var(--font-size-xl);
+  padding: var(--spacing-xs);
+  min-width: auto;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.exerciseGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-md);
+  flex: 1;
+  overflow-y: auto;
+  max-height: 60vh;
+  padding: var(--spacing-xs);
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.emptyContent {
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.emptyContent h3 {
+  margin: 0 0 var(--spacing-sm) 0;
+  color: var(--color-text);
+}
+
+.emptyContent p {
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.selectedSummary {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--spacing-md);
+}
+
+.summaryCard {
+  padding: var(--spacing-md);
+}
+
+.summaryCard h3 {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.selectedList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.selectedItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm);
+  background: var(--color-surface-secondary);
+  border-radius: var(--border-radius-sm);
+}
+
+.selectedItem span {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
+.removeButton {
+  color: var(--color-error);
+  font-size: var(--font-size-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.removeButton:hover {
+  background: var(--color-error-alpha);
+  color: var(--color-error);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .exerciseGrid {
+    grid-template-columns: 1fr;
+    max-height: 50vh;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .selectionCount {
+    align-self: flex-end;
+  }
+
+  .selectedList {
+    max-height: 120px;
+  }
+
+  .selectedItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+
+  .removeButton {
+    align-self: flex-end;
+  }
+}
+
+@media (min-width: 1200px) {
+  .exerciseGrid {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  }
+}

@@ -1,0 +1,201 @@
+.exerciseDetail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.header {
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.titleSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.name {
+  margin: 0;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.customBadge {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-primary-alpha);
+  color: var(--color-primary);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+}
+
+.difficultyBadge {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  text-transform: capitalize;
+}
+
+.compoundBadge {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-success-alpha);
+  color: var(--color-success);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.mediaSection {
+  display: flex;
+  justify-content: center;
+}
+
+.exerciseImage {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: var(--border-radius-lg);
+  object-fit: cover;
+  box-shadow: var(--shadow-md);
+}
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-lg);
+}
+
+.infoCard,
+.instructionsCard {
+  padding: var(--spacing-lg);
+}
+
+.sectionTitle {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+}
+
+.infoItem:last-child {
+  margin-bottom: 0;
+}
+
+.infoItem strong {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.muscleGroupTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.muscleGroupTag {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-surface-secondary);
+  color: var(--color-text);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.equipmentTag {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-info-alpha);
+  color: var(--color-info);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  display: inline-block;
+}
+
+.variationsList {
+  margin: 0;
+  padding-left: var(--spacing-md);
+  color: var(--color-text-muted);
+}
+
+.variationsList li {
+  margin-bottom: var(--spacing-xs);
+}
+
+.instructions {
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+.instructions p {
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+}
+
+.deleteButton {
+  color: var(--color-error);
+}
+
+.deleteButton:hover {
+  background: var(--color-error-alpha);
+  color: var(--color-error);
+}
+
+/* Responsive design */
+@media (min-width: 768px) {
+  .titleSection {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .detailsGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .instructionsCard {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .actions {
+    flex-direction: column;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+}

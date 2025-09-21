@@ -1,0 +1,178 @@
+.exerciseCard {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.exerciseCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.exerciseCard.selected {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-alpha);
+}
+
+.exerciseCard.compact {
+  padding: var(--spacing-sm);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-sm);
+}
+
+.titleSection {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex: 1;
+}
+
+.name {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.customBadge {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-primary-alpha);
+  color: var(--color-primary);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+}
+
+.metadata {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-xs);
+}
+
+.difficulty {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-transform: capitalize;
+}
+
+.compoundBadge {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-success-alpha);
+  color: var(--color-success);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.muscleGroups,
+.equipment {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.muscleGroups strong,
+.equipment strong {
+  color: var(--color-text);
+  margin-right: var(--spacing-xs);
+}
+
+.instructions {
+  font-size: var(--font-size-sm);
+}
+
+.instructions strong {
+  color: var(--color-text);
+  display: block;
+  margin-bottom: var(--spacing-xs);
+}
+
+.instructions p {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.media {
+  margin-top: var(--spacing-sm);
+}
+
+.exerciseImage {
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+  border-radius: var(--border-radius-md);
+  object-fit: cover;
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--color-border);
+}
+
+.deleteButton {
+  color: var(--color-error);
+}
+
+.deleteButton:hover {
+  background: var(--color-error-alpha);
+  color: var(--color-error);
+}
+
+/* Compact mode adjustments */
+.compact .header {
+  margin-bottom: var(--spacing-xs);
+}
+
+.compact .name {
+  font-size: var(--font-size-base);
+}
+
+.compact .details {
+  margin-bottom: var(--spacing-sm);
+}
+
+.compact .instructions {
+  display: none;
+}
+
+.compact .media {
+  display: none;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .metadata {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+}

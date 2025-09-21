@@ -94,7 +94,7 @@
   - Add calendar data loading and caching with React Query
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
 
-- [ ] 11. Exercise Library and Custom Exercise Management
+- [x] 11. Exercise Library and Custom Exercise Management
   - Create exercise library interface with search and filtering
   - Implement exercise categorization by muscle groups and equipment
   - Build custom exercise creation form with validation

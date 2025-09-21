@@ -1,0 +1,170 @@
+.exerciseReorder {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  max-height: 80vh;
+  overflow: hidden;
+}
+
+.header {
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.title {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.subtitle {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.exerciseList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  overflow-y: auto;
+  flex: 1;
+  padding: var(--spacing-xs);
+}
+
+.exerciseItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  transition: all 0.2s ease;
+  cursor: move;
+}
+
+.exerciseItem:hover {
+  background: var(--color-surface-hover);
+}
+
+.dragHandle {
+  color: var(--color-text-muted);
+  cursor: grab;
+  padding: var(--spacing-xs);
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.exerciseInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.exerciseName {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.exerciseControls {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.controlGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.controlGroup label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-medium);
+  min-width: 40px;
+}
+
+.numberInput {
+  width: 80px;
+}
+
+.exerciseActions {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
+.moveButton {
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-lg);
+  font-weight: bold;
+}
+
+.moveButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.removeButton {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+}
+
+.removeButton:hover {
+  background: var(--color-error-alpha);
+  color: var(--color-error);
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2xl);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .exerciseItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .exerciseControls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .exerciseActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+}
