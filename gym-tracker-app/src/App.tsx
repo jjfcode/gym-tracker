@@ -6,9 +6,9 @@ import { OfflineIndicator } from './components/ui/OfflineIndicator/OfflineIndica
 import { InstallPrompt } from './components/ui/InstallPrompt/InstallPrompt';
 import { UpdatePrompt } from './components/ui/UpdatePrompt/UpdatePrompt';
 import { LoadingSpinner } from './components/ui/LoadingSpinner/LoadingSpinner';
-import { useAuth } from './features/auth/AuthContext';
 import { AppLayout } from './components/layout/AppLayout/AppLayout';
 import ErrorBoundary from './components/ErrorBoundary';
+import { useAuth } from './features/auth/AuthContext';
 
 // Lazy load route components for code splitting
 const AuthFlow = lazy(() => import('./features/auth/components/AuthFlow'));
@@ -17,38 +17,59 @@ const WorkoutTracker = lazy(() => import('./features/workouts/components/Workout
 const ProgressTracking = lazy(() => import('./features/progress/components/ProgressTracking'));
 const WorkoutPlanning = lazy(() => import('./features/planning/components/WorkoutPlanning'));
 const ExerciseLibrary = lazy(() => import('./features/exercises/components/ExerciseLibrary'));
-const Settings = lazy(() => import('./features/settings').then(module => ({ default: module.Settings })));
+const Settings = lazy(() => import('./features/settings/components/Settings'));
 const Onboarding = lazy(() => import('./features/auth/components/Onboarding'));
 
-// Protected Route Component
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// Import the new AuthenticatedRoute component
+import { AuthenticatedRoute } from './components/AuthenticatedRoute';
+
+// Create a separate component for routes that uses auth context
+const AppRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return <LoadingSpinner />;
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
-  }
+  return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/auth" element={
+        isAuthenticated ? <Navigate to="/dashboard" replace /> : <AuthFlow />
+      } />
+      
+      <Route path="/onboarding" element={
+        isAuthenticated ? <Onboarding /> : <Navigate to="/auth" replace />
+      } />
 
-  return <>{children}</>;
+      {/* Protected Routes with Layout */}
+      <Route path="/" element={
+        isAuthenticated ? <AppLayout /> : <Navigate to="/auth" replace />
+      }>
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="workouts" element={<WorkoutTracker />} />
+        <Route path="progress" element={<ProgressTracking />} />
+        <Route path="planning" element={<WorkoutPlanning />} />
+        <Route path="exercises" element={<ExerciseLibrary />} />
+        <Route path="settings" element={<Settings />} />
+      </Route>
+
+      {/* Default route */}
+      <Route path="/" element={
+        <Navigate to={isAuthenticated ? "/dashboard" : "/auth"} replace />
+      } />
+
+      {/* Fallback route */}
+      <Route path="*" element={
+        <Navigate to={isAuthenticated ? "/dashboard" : "/auth"} replace />
+      } />
+    </Routes>
+  );
 };
 
-// Public Route Component (redirect to dashboard if authenticated)
-const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
-
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return <>{children}</>;
-};
+// Import the debug components
+import { AuthDebug } from './components/AuthDebug';
+import { SupabaseTest } from './components/SupabaseTest';
 
 function App() {
   return (
@@ -57,39 +78,16 @@ function App() {
         <PWAProvider>
           <ErrorBoundary>
             <Suspense fallback={<LoadingSpinner />}>
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/auth" element={
-                  <PublicRoute>
-                    <AuthFlow />
-                  </PublicRoute>
-                } />
-                
-                <Route path="/onboarding" element={
-                  <ProtectedRoute>
-                    <Onboarding />
-                  </ProtectedRoute>
-                } />
-
-                {/* Protected Routes with Layout */}
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <AppLayout />
-                  </ProtectedRoute>
-                }>
-                  <Route index element={<Navigate to="/dashboard" replace />} />
-                  <Route path="dashboard" element={<Dashboard />} />
-                  <Route path="workouts" element={<WorkoutTracker />} />
-                  <Route path="progress" element={<ProgressTracking />} />
-                  <Route path="planning" element={<WorkoutPlanning />} />
-                  <Route path="exercises" element={<ExerciseLibrary />} />
-                  <Route path="settings" element={<Settings />} />
-                </Route>
-
-                {/* Fallback route */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
+              <AppRoutes />
             </Suspense>
+            
+            {/* Debug Components - Remove these in production */}
+            {import.meta.env.DEV && (
+              <>
+                <AuthDebug />
+                <SupabaseTest />
+              </>
+            )}
             
             {/* PWA Components */}
             <OfflineIndicator />

@@ -33,17 +33,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
     let mounted = true;
 
     const initializeAuth = async () => {
+      console.log('Starting auth initialization...');
+      setLoading(true);
+      
       try {
-        setLoading(true);
-        const currentUser = await AuthService.getCurrentSession();
+        console.log('Calling getCurrentSession...');
+        
+        // Add timeout to the entire auth initialization
+        const authPromise = AuthService.getCurrentSession();
+        const timeoutPromise = new Promise<null>((resolve) => 
+          setTimeout(() => {
+            console.log('Auth initialization timeout, resolving with null');
+            resolve(null);
+          }, 8000)
+        );
+        
+        const currentUser = await Promise.race([authPromise, timeoutPromise]);
+        console.log('getCurrentSession completed:', currentUser);
         
         if (mounted) {
           setUser(currentUser);
+          console.log('Auth initialized, user set:', !!currentUser);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
         if (mounted) {
           setUser(null);
+          console.log('Auth initialization failed, user set to null');
         }
       }
     };
@@ -56,20 +72,46 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (!mounted) return;
 
         try {
+          console.log('Auth state change event:', event, 'session:', !!session);
           if (event === 'SIGNED_IN' && session?.user) {
-            const profile = await AuthService.fetchUserProfile(session.user.id);
-            setUser({
-              ...session.user,
-              profile,
-            });
+            console.log('User signed in, fetching profile...');
+            try {
+              const profile = await AuthService.fetchUserProfile(session.user.id);
+              console.log('Profile fetch completed, profile:', !!profile);
+              console.log('Setting user with profile...');
+              setUser({
+                ...session.user,
+                profile,
+              });
+              console.log('User set after sign in, isAuthenticated should now be true');
+            } catch (error) {
+              console.error('Profile fetch failed, setting user without profile:', error);
+              // Set user even if profile fetch fails
+              console.log('Setting user with default profile...');
+              setUser({
+                ...session.user,
+                profile: AuthService.createDefaultProfile(session.user.id),
+              });
+              console.log('User set with default profile');
+            }
           } else if (event === 'SIGNED_OUT') {
+            console.log('User signed out');
             setUser(null);
           } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-            const profile = await AuthService.fetchUserProfile(session.user.id);
-            setUser({
-              ...session.user,
-              profile,
-            });
+            console.log('Token refreshed, updating user...');
+            try {
+              const profile = await AuthService.fetchUserProfile(session.user.id);
+              setUser({
+                ...session.user,
+                profile,
+              });
+            } catch (error) {
+              console.error('Profile fetch failed on token refresh:', error);
+              setUser({
+                ...session.user,
+                profile: AuthService.createDefaultProfile(session.user.id),
+              });
+            }
           }
         } catch (error) {
           console.error('Error handling auth state change:', error);

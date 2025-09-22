@@ -1,7 +1,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button/Button';
 import { Input } from '../../../components/ui/Input/Input';
 import { Card } from '../../../components/ui/Card/Card';
@@ -16,6 +16,7 @@ interface SignUpFormProps {
 
 export function SignUpForm({ onSuccess, onNavigateToSignIn }: SignUpFormProps) {
   const { signUp, isLoading, error, clearError } = useAuth();
+  const navigate = useNavigate();
   
   const {
     register,
@@ -30,7 +31,13 @@ export function SignUpForm({ onSuccess, onNavigateToSignIn }: SignUpFormProps) {
     try {
       clearError();
       await signUp(data);
-      onSuccess?.();
+      
+      // After successful signup, redirect to onboarding
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate('/onboarding');
+      }
     } catch (error) {
       // Error is already handled by the auth context
       if (error instanceof Error && error.message.includes('already registered')) {

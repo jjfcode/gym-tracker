@@ -241,45 +241,110 @@ export class AuthService {
 
   // Get current session
   static async getCurrentSession(): Promise<AuthUser | null> {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    
-    if (error) {
-      console.error('Error getting session:', error);
+    try {
+      console.log('AuthService.getCurrentSession: Starting...');
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('getSession timeout')), 5000)
+      );
+      
+      const sessionPromise = supabase.auth.getSession();
+      
+      const { data: { session }, error } = await Promise.race([
+        sessionPromise,
+        timeoutPromise
+      ]);
+      
+      console.log('AuthService.getCurrentSession: getSession completed', { session: !!session, error: !!error });
+      
+      if (error) {
+        console.error('Error getting session:', error);
+        return null;
+      }
+
+      if (!session?.user) {
+        console.log('No session found');
+        return null;
+      }
+
+      console.log('Session found, fetching profile for user:', session.user.id);
+      // Fetch user profile
+      const profile = await this.fetchUserProfile(session.user.id);
+      console.log('Profile fetched:', !!profile);
+      
+      const result = {
+        ...session.user,
+        profile,
+      };
+      console.log('AuthService.getCurrentSession: Returning user');
+      return result;
+    } catch (error) {
+      console.error('Error in getCurrentSession:', error);
+      if (error instanceof Error && error.message === 'getSession timeout') {
+        console.log('getSession timed out, assuming no session');
+      }
       return null;
     }
-
-    if (!session?.user) {
-      return null;
-    }
-
-    // Fetch user profile
-    const profile = await this.fetchUserProfile(session.user.id);
-    
-    return {
-      ...session.user,
-      profile,
-    };
   }
 
   // Fetch user profile
   static async fetchUserProfile(userId: string): Promise<UserProfile | undefined> {
     try {
-      const { data, error } = await supabase
+      console.log('Fetching profile for user:', userId);
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('fetchUserProfile timeout')), 5000)
+      );
+      
+      const profilePromise = supabase
         .from('profile')
         .select('*')
         .eq('user_id', userId)
         .single();
+      
+      const { data, error } = await Promise.race([
+        profilePromise,
+        timeoutPromise
+      ]);
 
       if (error) {
+        console.log('Profile fetch error:', error);
+        // If table doesn't exist, create a default profile
+        if (error.code === 'PGRST116' || error.message.includes('relation "profile" does not exist')) {
+          console.warn('Profile table does not exist, creating default profile');
+          return this.createDefaultProfile(userId);
+        }
         console.error('Error fetching profile:', error);
-        return undefined;
+        // Return default profile instead of undefined to ensure auth continues
+        return this.createDefaultProfile(userId);
       }
 
+      console.log('Profile fetched successfully:', data);
       return data;
     } catch (error) {
       console.error('Error fetching profile:', error);
-      return undefined;
+      if (error instanceof Error && error.message === 'fetchUserProfile timeout') {
+        console.log('Profile fetch timed out, using default profile');
+      }
+      // Return default profile instead of undefined to ensure auth continues
+      return this.createDefaultProfile(userId);
     }
+  }
+
+  // Create a default profile when database table doesn't exist
+  static createDefaultProfile(userId: string): UserProfile {
+    return {
+      id: userId,
+      user_id: userId,
+      display_name: '',
+      locale: 'en',
+      units: 'imperial',
+      theme: 'system',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
   }
 
   // Create user profile
@@ -301,14 +366,19 @@ export class AuthService {
         .single();
 
       if (error) {
+        // If table doesn't exist, return a default profile
+        if (error.code === 'PGRST116' || error.message.includes('relation "profile" does not exist')) {
+          console.warn('Profile table does not exist, using default profile');
+          return this.createDefaultProfile(userId);
+        }
         console.error('Error creating profile:', error);
-        return undefined;
+        return this.createDefaultProfile(userId);
       }
 
       return data;
     } catch (error) {
       console.error('Error creating profile:', error);
-      return undefined;
+      return this.createDefaultProfile(userId);
     }
   }
 
@@ -329,6 +399,15 @@ export class AuthService {
         .single();
 
       if (error) {
+        // If table doesn't exist, return updated default profile
+        if (error.code === 'PGRST116' || error.message.includes('relation "profile" does not exist')) {
+          console.warn('Profile table does not exist, using default profile with updates');
+          return {
+            ...this.createDefaultProfile(userId),
+            ...updates,
+            updated_at: new Date().toISOString(),
+          };
+        }
         console.error('Error updating profile:', error);
         return undefined;
       }

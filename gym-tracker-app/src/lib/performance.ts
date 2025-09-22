@@ -65,32 +65,43 @@ export class WebVitalsMonitor {
     if (typeof window === 'undefined') return;
 
     try {
-      const { getCLS, getFID, getFCP, getLCP, getTTFB } = await import('web-vitals');
+      // Import web-vitals functions individually to handle potential import issues
+      const webVitals = await import('web-vitals');
+      
+      if (webVitals.getCLS) {
+        webVitals.getCLS((metric) => {
+          this.vitals.CLS = metric.value;
+          this.reportVital('CLS', metric.value, 0.1);
+        });
+      }
 
-      getCLS((metric) => {
-        this.vitals.CLS = metric.value;
-        this.reportVital('CLS', metric.value, 0.1);
-      });
+      if (webVitals.getFID) {
+        webVitals.getFID((metric) => {
+          this.vitals.FID = metric.value;
+          this.reportVital('FID', metric.value, 100);
+        });
+      }
 
-      getFID((metric) => {
-        this.vitals.FID = metric.value;
-        this.reportVital('FID', metric.value, 100);
-      });
+      if (webVitals.getFCP) {
+        webVitals.getFCP((metric) => {
+          this.vitals.FCP = metric.value;
+          this.reportVital('FCP', metric.value, 1800);
+        });
+      }
 
-      getFCP((metric) => {
-        this.vitals.FCP = metric.value;
-        this.reportVital('FCP', metric.value, 1800);
-      });
+      if (webVitals.getLCP) {
+        webVitals.getLCP((metric) => {
+          this.vitals.LCP = metric.value;
+          this.reportVital('LCP', metric.value, 2500);
+        });
+      }
 
-      getLCP((metric) => {
-        this.vitals.LCP = metric.value;
-        this.reportVital('LCP', metric.value, 2500);
-      });
-
-      getTTFB((metric) => {
-        this.vitals.TTFB = metric.value;
-        this.reportVital('TTFB', metric.value, 800);
-      });
+      if (webVitals.getTTFB) {
+        webVitals.getTTFB((metric) => {
+          this.vitals.TTFB = metric.value;
+          this.reportVital('TTFB', metric.value, 800);
+        });
+      }
     } catch (error) {
       console.warn('Web Vitals monitoring failed to initialize:', error);
     }
@@ -124,9 +135,12 @@ export class ResourcePreloader {
 
   // Preload critical resources
   static preloadCriticalResources(): void {
+    // Skip preloading in development to avoid console warnings
+    if (import.meta.env.DEV) return;
+    
     const criticalResources = [
-      '/icons/icon-192x192.svg',
-      '/icons/icon-512x512.svg',
+      '/icons/icon-192x192.png',
+      '/icons/icon-512x512.png',
     ];
 
     criticalResources.forEach(resource => {

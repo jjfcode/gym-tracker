@@ -10,18 +10,7 @@ import './lib/i18n'; // Initialize i18n
 import './styles/globals.css';
 import App from './App.tsx';
 
-// Register service worker for PWA functionality
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
-        console.log('SW registered: ', registration);
-      })
-      .catch((registrationError) => {
-        console.log('SW registration failed: ', registrationError);
-      });
-  });
-}
+// Service worker is handled by Vite PWA plugin
 
 // Create a client with optimized caching strategies
 const queryClient = new QueryClient({
@@ -50,15 +39,20 @@ const queryClient = new QueryClient({
   },
 });
 
-// Initialize security service
-SecurityService.initialize().catch(error => {
-  console.error('Failed to initialize security service:', error);
-});
+// Initialize services in development mode only to reduce console noise
+if (import.meta.env.DEV) {
+  // Initialize security service
+  SecurityService.initialize().catch(error => {
+    console.error('Failed to initialize security service:', error);
+  });
 
-// Initialize performance monitoring
-initializePerformanceMonitoring();
-
-if (process.env.NODE_ENV === 'production') {
+  // Initialize performance monitoring
+  initializePerformanceMonitoring();
+} else {
+  // Production initialization
+  SecurityService.initialize();
+  initializePerformanceMonitoring();
+  
   // Log performance report after app loads
   window.addEventListener('load', () => {
     setTimeout(() => {

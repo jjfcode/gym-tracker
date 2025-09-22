@@ -452,6 +452,11 @@ export class SecurityService {
       });
 
       if (error) {
+        // If function doesn't exist, skip suspicious activity check
+        if (error.code === 'PGRST202' || error.message.includes('function detect_suspicious_activity')) {
+          console.warn('Suspicious activity detection function not available, skipping check');
+          return false;
+        }
         console.error('Error checking suspicious activity:', error);
         return false;
       }

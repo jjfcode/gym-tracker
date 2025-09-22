@@ -1,6 +1,8 @@
 import React from 'react';
-import { AppLayout } from '../../../components/layout';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../../../components/ui';
+import { Button } from '../../../components/ui/Button/Button';
+import { useAuth } from '../../auth/AuthContext';
 import styles from './Dashboard.module.css';
 
 // Simple components without React Query for now
@@ -34,45 +36,148 @@ const QuickStats: React.FC = () => {
   );
 };
 
+const WelcomeMessage: React.FC = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  const displayName = user?.profile?.display_name || user?.email?.split('@')[0] || 'there';
+  const isProfileIncomplete = !user?.profile?.display_name || user?.profile?.display_name.trim() === '';
+  
+  return (
+    <Card className={styles.welcomeCard}>
+      <div className={styles.welcomeContent}>
+        <h2>Welcome to Gym Tracker, {displayName}! 🎯</h2>
+        {isProfileIncomplete ? (
+          <p>Let's complete your setup to personalize your fitness journey. You can start using the app right away or complete your profile first.</p>
+        ) : (
+          <p>You're all set up and ready to start your fitness journey. Here's how to get started:</p>
+        )}
+        
+        <div className={styles.gettingStarted}>
+          {isProfileIncomplete && (
+            <div className={styles.step}>
+              <span className={styles.stepNumber}>0</span>
+              <div className={styles.stepContent}>
+                <h4>Complete Your Profile</h4>
+                <p>Set up your preferences and goals</p>
+                <Button 
+                  variant="primary" 
+                  size="sm"
+                  onClick={() => navigate('/onboarding')}
+                >
+                  Complete Setup
+                </Button>
+              </div>
+            </div>
+          )}
+          
+          <div className={styles.step}>
+            <span className={styles.stepNumber}>1</span>
+            <div className={styles.stepContent}>
+              <h4>Plan Your Workouts</h4>
+              <p>Set up your weekly workout schedule</p>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/planning')}
+              >
+                Go to Planning
+              </Button>
+            </div>
+          </div>
+          
+          <div className={styles.step}>
+            <span className={styles.stepNumber}>2</span>
+            <div className={styles.stepContent}>
+              <h4>Log Your Weight</h4>
+              <p>Track your progress over time</p>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/progress')}
+              >
+                Log Weight
+              </Button>
+            </div>
+          </div>
+          
+          <div className={styles.step}>
+            <span className={styles.stepNumber}>3</span>
+            <div className={styles.stepContent}>
+              <h4>Start Your First Workout</h4>
+              <p>Begin tracking your exercises</p>
+              <Button 
+                variant="primary" 
+                size="sm"
+                onClick={() => navigate('/workouts')}
+              >
+                Start Workout
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
 const TodayWorkout: React.FC = () => {
   return (
     <Card className={styles.todayWorkout}>
       <div className={styles.restDay}>
-        <h3>Rest Day</h3>
-        <p>No workout scheduled for today. Take some time to recover!</p>
+        <h3>Today's Workout</h3>
+        <p>No workout scheduled for today. Start by planning your weekly routine!</p>
       </div>
     </Card>
   );
 };
 
 const QuickActions: React.FC = () => {
+  const navigate = useNavigate();
+  
   return (
     <div className={styles.quickActions}>
       <h2 className={styles.title}>Quick Actions</h2>
       
       <div className={styles.actionsGrid}>
         <Card className={styles.actionCard} hoverable>
-          <button style={{ width: '100%', padding: '0.75rem', border: 'none', borderRadius: '6px', backgroundColor: '#f3f4f6', cursor: 'pointer' }}>
-            Log Weight
-          </button>
+          <Button 
+            variant="ghost" 
+            fullWidth
+            onClick={() => navigate('/progress')}
+          >
+            📊 Log Weight
+          </Button>
         </Card>
         
         <Card className={styles.actionCard} hoverable>
-          <button style={{ width: '100%', padding: '0.75rem', border: 'none', borderRadius: '6px', backgroundColor: '#f3f4f6', cursor: 'pointer' }}>
-            View Calendar
-          </button>
+          <Button 
+            variant="ghost" 
+            fullWidth
+            onClick={() => navigate('/planning')}
+          >
+            📅 View Calendar
+          </Button>
         </Card>
         
         <Card className={styles.actionCard} hoverable>
-          <button style={{ width: '100%', padding: '0.75rem', border: 'none', borderRadius: '6px', backgroundColor: '#f3f4f6', cursor: 'pointer' }}>
-            View Progress
-          </button>
+          <Button 
+            variant="ghost" 
+            fullWidth
+            onClick={() => navigate('/progress')}
+          >
+            📈 View Progress
+          </Button>
         </Card>
         
         <Card className={styles.actionCard} hoverable>
-          <button style={{ width: '100%', padding: '0.75rem', border: 'none', borderRadius: '6px', backgroundColor: '#f3f4f6', cursor: 'pointer' }}>
-            Settings
-          </button>
+          <Button 
+            variant="ghost" 
+            fullWidth
+            onClick={() => navigate('/settings')}
+          >
+            ⚙️ Settings
+          </Button>
         </Card>
       </div>
     </div>
@@ -81,21 +186,23 @@ const QuickActions: React.FC = () => {
 
 const Dashboard: React.FC = () => {
   return (
-    <AppLayout title="Dashboard">
-      <div className={styles.dashboard}>
-        <div className={styles.quickStats}>
-          <QuickStats />
-        </div>
-        
-        <div className={styles.todaySection}>
-          <TodayWorkout />
-        </div>
-        
-        <div className={styles.quickActions}>
-          <QuickActions />
-        </div>
+    <div className={styles.dashboard}>
+      <div className={styles.welcomeSection}>
+        <WelcomeMessage />
       </div>
-    </AppLayout>
+      
+      <div className={styles.quickStats}>
+        <QuickStats />
+      </div>
+      
+      <div className={styles.todaySection}>
+        <TodayWorkout />
+      </div>
+      
+      <div className={styles.quickActions}>
+        <QuickActions />
+      </div>
+    </div>
   );
 };
 
