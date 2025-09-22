@@ -1,0 +1,104 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+  background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-primary-100) 100%);
+}
+
+.authCard {
+  background: var(--color-surface);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-xl);
+  width: 100%;
+  max-width: 480px;
+  border: 1px solid var(--color-border);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+}
+
+.title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.subtitle {
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.formContainer {
+  margin-bottom: var(--spacing-xl);
+}
+
+.navigation {
+  margin-top: var(--spacing-lg);
+  text-align: center;
+}
+
+.navigation p {
+  margin: var(--spacing-sm) 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.features {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--spacing-lg);
+}
+
+.features h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-md) 0;
+  text-align: center;
+}
+
+.features ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.features li {
+  padding: var(--spacing-xs) 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.features li::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  background: var(--color-primary-500);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .container {
+    padding: var(--spacing-sm);
+  }
+  
+  .authCard {
+    padding: var(--spacing-lg);
+  }
+  
+  .title {
+    font-size: var(--font-size-xl);
+  }
+}

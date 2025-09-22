@@ -6,76 +6,96 @@ import { OfflineIndicator } from './components/ui/OfflineIndicator/OfflineIndica
 import { InstallPrompt } from './components/ui/InstallPrompt/InstallPrompt';
 import { UpdatePrompt } from './components/ui/UpdatePrompt/UpdatePrompt';
 import { LoadingSpinner } from './components/ui/LoadingSpinner/LoadingSpinner';
+import { useAuth } from './features/auth/AuthContext';
+import { AppLayout } from './components/layout/AppLayout/AppLayout';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy load route components for code splitting
-const Home = lazy(() => import('./components/Home/Home'));
+const AuthFlow = lazy(() => import('./features/auth/components/AuthFlow'));
 const Dashboard = lazy(() => import('./features/dashboard/components/Dashboard'));
-const ProgressDemo = lazy(() => import('./features/progress/components/ProgressDemo'));
-const PlanningView = lazy(() => import('./features/planning').then(module => ({ default: module.PlanningView })));
-const ExerciseLibraryDemo = lazy(() => import('./features/exercises/components/ExerciseLibraryDemo'));
+const WorkoutTracker = lazy(() => import('./features/workouts/components/WorkoutTracker'));
+const ProgressTracking = lazy(() => import('./features/progress/components/ProgressTracking'));
+const WorkoutPlanning = lazy(() => import('./features/planning/components/WorkoutPlanning'));
+const ExerciseLibrary = lazy(() => import('./features/exercises/components/ExerciseLibrary'));
 const Settings = lazy(() => import('./features/settings').then(module => ({ default: module.Settings })));
-const OnboardingPlaceholder = lazy(() => import('./components/OnboardingPlaceholder/OnboardingPlaceholder'));
-const I18nDemo = lazy(() => import('./components/I18nDemo').then(module => ({ default: module.I18nDemo })));
-const PWADemo = lazy(() => import('./components/PWADemo').then(module => ({ default: module.PWADemo })));
+const Onboarding = lazy(() => import('./features/auth/components/Onboarding'));
 
-import ErrorBoundary from './components/ErrorBoundary';
+// Protected Route Component
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// Public Route Component (redirect to dashboard if authenticated)
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+};
 
 function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
         <PWAProvider>
-          <Suspense fallback={<LoadingSpinner />}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/onboarding" element={
-                <ErrorBoundary>
-                  <OnboardingPlaceholder />
-                </ErrorBoundary>
-              } />
-              <Route path="/dashboard" element={
-                <ErrorBoundary>
-                  <Dashboard />
-                </ErrorBoundary>
-              } />
-              <Route path="/progress" element={
-                <ErrorBoundary>
-                  <ProgressDemo />
-                </ErrorBoundary>
-              } />
-              <Route path="/planning" element={
-                <ErrorBoundary>
-                  <PlanningView />
-                </ErrorBoundary>
-              } />
-              <Route path="/exercises" element={
-                <ErrorBoundary>
-                  <ExerciseLibraryDemo />
-                </ErrorBoundary>
-              } />
-              <Route path="/settings" element={
-                <ErrorBoundary>
-                  <Settings />
-                </ErrorBoundary>
-              } />
-              <Route path="/i18n-demo" element={
-                <ErrorBoundary>
-                  <I18nDemo />
-                </ErrorBoundary>
-              } />
-              <Route path="/pwa-demo" element={
-                <ErrorBoundary>
-                  <PWADemo />
-                </ErrorBoundary>
-              } />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
-          
-          {/* PWA Components */}
-          <OfflineIndicator />
-          <InstallPrompt />
-          <UpdatePrompt />
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner />}>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/auth" element={
+                  <PublicRoute>
+                    <AuthFlow />
+                  </PublicRoute>
+                } />
+                
+                <Route path="/onboarding" element={
+                  <ProtectedRoute>
+                    <Onboarding />
+                  </ProtectedRoute>
+                } />
+
+                {/* Protected Routes with Layout */}
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <AppLayout />
+                  </ProtectedRoute>
+                }>
+                  <Route index element={<Navigate to="/dashboard" replace />} />
+                  <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="workouts" element={<WorkoutTracker />} />
+                  <Route path="progress" element={<ProgressTracking />} />
+                  <Route path="planning" element={<WorkoutPlanning />} />
+                  <Route path="exercises" element={<ExerciseLibrary />} />
+                  <Route path="settings" element={<Settings />} />
+                </Route>
+
+                {/* Fallback route */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+            
+            {/* PWA Components */}
+            <OfflineIndicator />
+            <InstallPrompt />
+            <UpdatePrompt />
+          </ErrorBoundary>
         </PWAProvider>
       </ThemeProvider>
     </BrowserRouter>

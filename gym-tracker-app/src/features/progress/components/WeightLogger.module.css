@@ -1,0 +1,50 @@
+.loggerCard {
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.loggerCard h3 {
+  margin: 0 0 var(--space-4) 0;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.formGroup label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.submitButton {
+  align-self: flex-start;
+  min-width: 120px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+  
+  .submitButton {
+    align-self: stretch;
+  }
+}

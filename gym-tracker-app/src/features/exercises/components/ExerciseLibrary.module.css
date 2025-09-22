@@ -1,0 +1,253 @@
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--space-4);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.titleSection h1 {
+  margin: 0 0 var(--space-1) 0;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.titleSection p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-md);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.searchAndFilters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.searchBar {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.searchInput {
+  flex: 1;
+  max-width: 400px;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  position: relative;
+}
+
+.exerciseGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-4);
+}
+
+.emptyState {
+  text-align: center;
+  padding: var(--space-8);
+  grid-column: 1 / -1;
+}
+
+.emptyState h3 {
+  margin: 0 0 var(--space-2) 0;
+  color: var(--color-text-primary);
+}
+
+.emptyState p {
+  margin: 0 0 var(--space-4) 0;
+  color: var(--color-text-secondary);
+}
+
+/* Sidebar for exercise details */
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 400px;
+  height: 100vh;
+  background: var(--color-background);
+  border-left: 1px solid var(--color-border);
+  z-index: var(--z-sidebar);
+  overflow-y: auto;
+  padding: var(--space-4);
+}
+
+.exerciseDetails {
+  height: 100%;
+  padding: var(--space-4);
+}
+
+.detailsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detailsHeader h3 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+  flex: 1;
+}
+
+.exerciseInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.infoSection h4 {
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.infoSection p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.muscleList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.muscleTag {
+  background: var(--color-primary-100);
+  color: var(--color-primary-700);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.muscleTagSecondary {
+  background: var(--color-secondary-100);
+  color: var(--color-secondary-700);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.instructionsList {
+  margin: 0;
+  padding-left: var(--space-4);
+  color: var(--color-text-secondary);
+}
+
+.instructionsList li {
+  margin-bottom: var(--space-1);
+  line-height: 1.5;
+}
+
+.exerciseActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+/* Layout with sidebar */
+.container:has(.sidebar) {
+  margin-right: 400px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+  .container {
+    padding: var(--space-2);
+    margin-right: 0;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+
+  .searchAndFilters {
+    gap: var(--space-3);
+  }
+
+  .exerciseGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    width: 100%;
+    left: 0;
+    right: 0;
+  }
+
+  .container:has(.sidebar) {
+    margin-right: 0;
+  }
+}
+
+/* Tablet Responsive */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .exerciseGrid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+
+  .sidebar {
+    width: 350px;
+  }
+
+  .container:has(.sidebar) {
+    margin-right: 350px;
+  }
+}
+
+/* Large Screen */
+@media (min-width: 1025px) {
+  .container {
+    padding: var(--space-6);
+  }
+
+  .exerciseGrid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+/* Dark theme adjustments */
+[data-theme='dark'] .sidebar {
+  background: var(--color-background);
+  border-color: var(--color-border);
+}
+
+/* System theme */
+@media (prefers-color-scheme: dark) {
+  [data-theme='system'] .sidebar {
+    background: var(--color-background);
+    border-color: var(--color-border);
+  }
+}

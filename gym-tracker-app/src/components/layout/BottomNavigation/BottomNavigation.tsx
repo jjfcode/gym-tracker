@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import styles from './BottomNavigation.module.css';
 
 interface NavItem {
@@ -6,20 +7,14 @@ interface NavItem {
   label: string;
   icon: React.ReactNode;
   href: string;
-  isActive?: boolean;
 }
 
-interface BottomNavigationProps {
-  items?: NavItem[];
-  onItemClick?: (item: NavItem) => void;
-}
-
-// Default navigation items - these will be updated when routing is implemented
-const defaultItems: NavItem[] = [
+// Navigation items for the integrated app
+const navigationItems: NavItem[] = [
   {
     id: 'dashboard',
     label: 'Dashboard',
-    href: '/',
+    href: '/dashboard',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <rect x="3" y="3" width="7" height="7"></rect>
@@ -28,7 +23,6 @@ const defaultItems: NavItem[] = [
         <rect x="3" y="14" width="7" height="7"></rect>
       </svg>
     ),
-    isActive: true,
   },
   {
     id: 'workouts',
@@ -71,48 +65,49 @@ const defaultItems: NavItem[] = [
     ),
   },
   {
-    id: 'settings',
-    label: 'Settings',
-    href: '/settings',
+    id: 'exercises',
+    label: 'Exercises',
+    href: '/exercises',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
-        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M14.5 2H9.5a1 1 0 0 0-1 1v1.5a1 1 0 0 1-1 1h-1a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1a1 1 0 0 1 1 1v1.5a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1V12a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-1a1 1 0 0 1-1-1V3a1 1 0 0 0-1-1z"></path>
+        <path d="M5 2v20"></path>
+        <path d="M19 2v20"></path>
       </svg>
     ),
   },
 ];
 
-const BottomNavigation: React.FC<BottomNavigationProps> = ({
-  items = defaultItems,
-  onItemClick,
-}) => {
+const BottomNavigation: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const handleItemClick = (item: NavItem) => {
-    if (onItemClick) {
-      onItemClick(item);
-    }
-    // Default behavior - this will be enhanced when routing is added
-    console.log(`Navigate to ${item.href}`);
+    navigate(item.href);
   };
 
   return (
     <nav className={styles.navigation} role="navigation" aria-label="Main navigation">
       <div className={styles.container}>
-        {items.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={`${styles.item} ${item.isActive ? styles.active : ''}`}
-            onClick={() => handleItemClick(item)}
-            aria-label={item.label}
-            aria-current={item.isActive ? 'page' : undefined}
-          >
-            <span className={styles.icon} aria-hidden="true">
-              {item.icon}
-            </span>
-            <span className={styles.label}>{item.label}</span>
-          </button>
-        ))}
+        {navigationItems.map((item) => {
+          const isActive = location.pathname === item.href;
+          
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={`${styles.item} ${isActive ? styles.active : ''}`}
+              onClick={() => handleItemClick(item)}
+              aria-label={item.label}
+              aria-current={isActive ? 'page' : undefined}
+            >
+              <span className={styles.icon} aria-hidden="true">
+                {item.icon}
+              </span>
+              <span className={styles.label}>{item.label}</span>
+            </button>
+          );
+        })}
       </div>
     </nav>
   );

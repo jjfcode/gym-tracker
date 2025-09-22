@@ -1,0 +1,161 @@
+.exerciseCard {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  overflow: hidden;
+}
+
+.exerciseCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary-200);
+}
+
+.exerciseCard.selected {
+  border-color: var(--color-primary-500);
+  background: var(--color-primary-50);
+}
+
+.imageContainer {
+  width: 100%;
+  height: 150px;
+  overflow: hidden;
+  background: var(--color-background);
+}
+
+.exerciseImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.content {
+  padding: var(--space-4);
+}
+
+.exerciseName {
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+
+.category {
+  display: inline-block;
+  background: var(--color-secondary-100);
+  color: var(--color-secondary-700);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--space-3);
+  text-transform: capitalize;
+}
+
+.muscles {
+  margin-bottom: var(--space-3);
+}
+
+.primaryMuscles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.muscleTag {
+  background: var(--color-primary-100);
+  color: var(--color-primary-700);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  text-transform: capitalize;
+}
+
+.moreTag {
+  background: var(--color-border);
+  color: var(--color-text-secondary);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.metadata {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+  gap: var(--space-2);
+}
+
+.equipment {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  flex: 1;
+}
+
+.difficulty {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  text-transform: capitalize;
+}
+
+.difficulty.beginner {
+  background: var(--color-success-100);
+  color: var(--color-success-700);
+}
+
+.difficulty.intermediate {
+  background: var(--color-warning-100);
+  color: var(--color-warning-700);
+}
+
+.difficulty.advanced {
+  background: var(--color-error-100);
+  color: var(--color-error-700);
+}
+
+.description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  margin: 0 0 var(--space-4) 0;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.actions button {
+  flex: 1;
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .content {
+    padding: var(--space-3);
+  }
+  
+  .imageContainer {
+    height: 120px;
+  }
+  
+  .exerciseName {
+    font-size: var(--font-size-sm);
+  }
+  
+  .actions {
+    flex-direction: column;
+  }
+  
+  .metadata {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+}

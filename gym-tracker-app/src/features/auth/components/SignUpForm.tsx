@@ -2,16 +2,19 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
-import { Button, Input, Card } from '../../../components/ui';
+import { Button } from '../../../components/ui/Button/Button';
+import { Input } from '../../../components/ui/Input/Input';
+import { Card } from '../../../components/ui/Card/Card';
 import { useAuth } from '../AuthContext';
 import { signUpSchema, type SignUpFormData } from '../../../lib/validations/auth';
 import styles from './AuthForms.module.css';
 
 interface SignUpFormProps {
   onSuccess?: () => void;
+  onNavigateToSignIn?: () => void;
 }
 
-export function SignUpForm({ onSuccess }: SignUpFormProps) {
+export function SignUpForm({ onSuccess, onNavigateToSignIn }: SignUpFormProps) {
   const { signUp, isLoading, error, clearError } = useAuth();
   
   const {
@@ -107,9 +110,15 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
       <div className={styles.authFooter}>
         <p>
           Already have an account?{' '}
-          <Link to="/auth/signin" className={styles.link}>
-            Sign in
-          </Link>
+          {onNavigateToSignIn ? (
+            <Button variant="link" onClick={onNavigateToSignIn}>
+              Sign in
+            </Button>
+          ) : (
+            <Link to="/auth/signin" className={styles.link}>
+              Sign in
+            </Link>
+          )}
         </p>
       </div>
     </Card>

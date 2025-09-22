@@ -129,54 +129,108 @@ export default defineConfig({
     // Bundle optimization
     rollupOptions: {
       output: {
-        manualChunks: {
+        manualChunks: (id) => {
           // Vendor chunks
-          'react-vendor': ['react', 'react-dom'],
-          'router-vendor': ['react-router-dom'],
-          'query-vendor': ['@tanstack/react-query'],
-          'supabase-vendor': ['@supabase/supabase-js'],
-          'chart-vendor': ['recharts'],
-          'form-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],
-          'i18n-vendor': ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'react-vendor';
+            }
+            if (id.includes('react-router')) {
+              return 'router-vendor';
+            }
+            if (id.includes('@tanstack/react-query')) {
+              return 'query-vendor';
+            }
+            if (id.includes('@supabase/supabase-js')) {
+              return 'supabase-vendor';
+            }
+            if (id.includes('recharts')) {
+              return 'chart-vendor';
+            }
+            if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('zod')) {
+              return 'form-vendor';
+            }
+            if (id.includes('i18next') || id.includes('react-i18next')) {
+              return 'i18n-vendor';
+            }
+            if (id.includes('zustand')) {
+              return 'state-vendor';
+            }
+            // Other vendor libraries
+            return 'vendor';
+          }
           
-          // Feature chunks
-          'auth-feature': [
-            './src/features/auth/index.ts',
-            './src/features/auth/AuthContext.tsx',
-          ],
-          'dashboard-feature': [
-            './src/features/dashboard/index.ts',
-          ],
-          'workouts-feature': [
-            './src/features/workouts/index.ts',
-          ],
-          'progress-feature': [
-            './src/features/progress/index.ts',
-          ],
-          'planning-feature': [
-            './src/features/planning/index.ts',
-          ],
-          'exercises-feature': [
-            './src/features/exercises/index.ts',
-          ],
-          'settings-feature': [
-            './src/features/settings/index.ts',
-          ],
+          // Feature-based chunks
+          if (id.includes('/features/auth/')) {
+            return 'auth-feature';
+          }
+          if (id.includes('/features/dashboard/')) {
+            return 'dashboard-feature';
+          }
+          if (id.includes('/features/workouts/')) {
+            return 'workouts-feature';
+          }
+          if (id.includes('/features/progress/')) {
+            return 'progress-feature';
+          }
+          if (id.includes('/features/planning/')) {
+            return 'planning-feature';
+          }
+          if (id.includes('/features/exercises/')) {
+            return 'exercises-feature';
+          }
+          if (id.includes('/features/settings/')) {
+            return 'settings-feature';
+          }
+          
+          // UI components chunk
+          if (id.includes('/components/ui/')) {
+            return 'ui-components';
+          }
         },
+        // Optimize asset naming
+        assetFileNames: (assetInfo) => {
+          const info = assetInfo.name.split('.');
+          const ext = info[info.length - 1];
+          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
+            return `assets/images/[name]-[hash][extname]`;
+          }
+          if (/woff2?|eot|ttf|otf/i.test(ext)) {
+            return `assets/fonts/[name]-[hash][extname]`;
+          }
+          return `assets/[name]-[hash][extname]`;
+        },
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
       },
     },
     // Optimize chunk size
     chunkSizeWarningLimit: 1000,
-    // Enable source maps for production debugging
-    sourcemap: true,
-    // Minification
+    // Enable source maps for production debugging (but smaller)
+    sourcemap: process.env.NODE_ENV === 'production' ? 'hidden' : true,
+    // Advanced minification
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true,
+        drop_console: process.env.NODE_ENV === 'production',
         drop_debugger: true,
+        pure_funcs: process.env.NODE_ENV === 'production' ? ['console.log', 'console.info'] : [],
+        passes: 2,
+      },
+      mangle: {
+        safari10: true,
+      },
+      format: {
+        comments: false,
       },
     },
+    // CSS optimization
+    cssCodeSplit: true,
+    cssMinify: true,
+    // Asset optimization
+    assetsInlineLimit: 4096, // 4kb
+    // Target modern browsers for smaller bundles
+    target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'],
   },
   // Performance optimizations
   optimizeDeps: {

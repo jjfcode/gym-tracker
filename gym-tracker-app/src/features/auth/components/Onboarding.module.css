@@ -1,0 +1,185 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-primary-100) 100%);
+}
+
+.onboardingCard {
+  width: 100%;
+  max-width: 600px;
+  padding: var(--space-8);
+}
+
+.header {
+  margin-bottom: var(--space-6);
+}
+
+.progressBar {
+  width: 100%;
+  height: 8px;
+  background: var(--color-border);
+  border-radius: var(--border-radius-full);
+  overflow: hidden;
+  margin-bottom: var(--space-3);
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--color-primary-500);
+  transition: width 0.3s ease;
+}
+
+.stepIndicator {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.stepContent {
+  margin-bottom: var(--space-8);
+}
+
+.stepContent h2 {
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  text-align: center;
+}
+
+.stepContent p {
+  margin: 0 0 var(--space-6) 0;
+  color: var(--color-text-secondary);
+  text-align: center;
+  font-size: var(--font-size-md);
+}
+
+.formGroup {
+  margin-bottom: var(--space-4);
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.optionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.optionCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-4);
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.optionCard:hover {
+  border-color: var(--color-primary-300);
+  background: var(--color-primary-50);
+}
+
+.optionCard.selected {
+  border-color: var(--color-primary-500);
+  background: var(--color-primary-100);
+}
+
+.optionIcon {
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--space-2);
+}
+
+.optionLabel {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-1);
+}
+
+.optionDesc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.slider {
+  width: 100%;
+  height: 6px;
+  border-radius: var(--border-radius-full);
+  background: var(--color-border);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-primary-500);
+  cursor: pointer;
+  border: 2px solid var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-primary-500);
+  cursor: pointer;
+  border: 2px solid var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.sliderLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.actions button {
+  flex: 1;
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .container {
+    padding: var(--space-2);
+  }
+  
+  .onboardingCard {
+    padding: var(--space-6);
+  }
+  
+  .optionGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .actions {
+    flex-direction: column;
+  }
+}

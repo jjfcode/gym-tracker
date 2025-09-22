@@ -1,0 +1,101 @@
+.calendar {
+  padding: var(--space-4);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.header h3 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+}
+
+.weekGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-2);
+}
+
+.dayCard {
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-3);
+  min-height: 120px;
+  background: var(--color-background);
+}
+
+.dayCard.today {
+  border-color: var(--color-primary-500);
+  background: var(--color-primary-50);
+}
+
+.dayHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-2);
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dayName {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+}
+
+.dayNumber {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.workoutSlot {
+  flex: 1;
+}
+
+.workout {
+  background: var(--color-primary-100);
+  border: 1px solid var(--color-primary-200);
+  border-radius: var(--border-radius-sm);
+  padding: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.workoutType {
+  display: block;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-primary-700);
+  margin-bottom: var(--space-1);
+}
+
+.workoutTime {
+  font-size: var(--font-size-xs);
+  color: var(--color-primary-600);
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .weekGrid {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+  
+  .dayCard {
+    min-height: 80px;
+    padding: var(--space-2);
+  }
+  
+  .dayHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+}

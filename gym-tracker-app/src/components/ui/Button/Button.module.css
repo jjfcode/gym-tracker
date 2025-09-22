@@ -109,6 +109,42 @@
   border-color: var(--color-error-700);
 }
 
+.outline {
+  background-color: transparent;
+  color: var(--color-primary-600);
+  border-color: var(--color-primary-600);
+}
+
+.outline:hover:not(:disabled) {
+  background-color: var(--color-primary-50);
+  border-color: var(--color-primary-700);
+  color: var(--color-primary-700);
+}
+
+.outline:active:not(:disabled) {
+  background-color: var(--color-primary-100);
+  border-color: var(--color-primary-800);
+  color: var(--color-primary-800);
+}
+
+.link {
+  background-color: transparent;
+  color: var(--color-primary-600);
+  border-color: transparent;
+  text-decoration: underline;
+  padding: 0;
+  min-height: auto;
+}
+
+.link:hover:not(:disabled) {
+  color: var(--color-primary-700);
+  text-decoration: none;
+}
+
+.link:active:not(:disabled) {
+  color: var(--color-primary-800);
+}
+
 /* Full width */
 .fullWidth {
   width: 100%;

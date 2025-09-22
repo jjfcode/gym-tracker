@@ -5,6 +5,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider } from './features/auth/AuthContext';
 import { performanceMonitor } from './lib/performance-monitor';
 import { SecurityService } from './lib/security';
+import { initializePerformanceMonitoring } from './lib/performance';
 import './lib/i18n'; // Initialize i18n
 import './styles/globals.css';
 import App from './App.tsx';
@@ -55,6 +56,8 @@ SecurityService.initialize().catch(error => {
 });
 
 // Initialize performance monitoring
+initializePerformanceMonitoring();
+
 if (process.env.NODE_ENV === 'production') {
   // Log performance report after app loads
   window.addEventListener('load', () => {

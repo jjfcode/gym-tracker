@@ -1,12 +1,12 @@
 // Base UI Components
-export { default as Button } from './Button';
-export type { ButtonVariant, ButtonSize } from './Button';
+export { Button, default as ButtonDefault } from './Button/Button';
+export type { ButtonVariant, ButtonSize } from './Button/Button';
 
-export { default as Input } from './Input';
-export type { InputSize, InputVariant } from './Input';
+export { Input, default as InputDefault } from './Input/Input';
+export type { InputSize, InputVariant } from './Input/Input';
 
-export { default as Card } from './Card';
-export type { CardVariant, CardPadding } from './Card';
+export { Card, default as CardDefault } from './Card/Card';
+export type { CardVariant, CardPadding } from './Card/Card';
 
 export { default as Modal } from './Modal';
 export type { ModalSize } from './Modal';

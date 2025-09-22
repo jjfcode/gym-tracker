@@ -1,0 +1,224 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--space-4);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-6);
+  gap: var(--space-4);
+}
+
+.workoutInfo h1 {
+  margin: 0 0 var(--space-1) 0;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.workoutInfo p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.startOptions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.quickStartCard {
+  text-align: center;
+  padding: var(--space-6);
+}
+
+.quickStartCard h3 {
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--font-size-xl);
+  color: var(--color-text-primary);
+}
+
+.quickStartCard p {
+  margin: 0 0 var(--space-4) 0;
+  color: var(--color-text-secondary);
+}
+
+.startButton {
+  min-width: 200px;
+}
+
+.templates h3 {
+  margin: 0 0 var(--space-4) 0;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+}
+
+.templateGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: var(--space-4);
+}
+
+.templateCard {
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.templateCard h4 {
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+}
+
+.templateCard p {
+  margin: 0 0 var(--space-3) 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.exercises {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.exerciseCard {
+  padding: var(--space-4);
+}
+
+.exerciseHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.exerciseHeader h3 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+}
+
+.setCount {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  background: var(--color-primary-50);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--border-radius-sm);
+}
+
+.sets {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.setRow,
+.addSetRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border-radius: var(--border-radius-md);
+  background: var(--color-background);
+}
+
+.setNumber {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-100);
+  color: var(--color-primary-700);
+  border-radius: 50%;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  flex-shrink: 0;
+}
+
+.setInputs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+}
+
+.setInput {
+  width: 80px;
+  text-align: center;
+}
+
+.inputLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  min-width: 30px;
+}
+
+.setActions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.completedSet {
+  background: var(--color-success-100);
+  color: var(--color-success-700);
+}
+
+.emptyState {
+  text-align: center;
+  padding: var(--space-8);
+}
+
+.emptyState h3 {
+  margin: 0 0 var(--space-2) 0;
+  color: var(--color-text-primary);
+}
+
+.emptyState p {
+  margin: 0 0 var(--space-4) 0;
+  color: var(--color-text-secondary);
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .container {
+    padding: var(--space-2);
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+
+  .templateGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .setInputs {
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+
+  .setInput {
+    width: 60px;
+  }
+
+  .inputLabel {
+    min-width: 25px;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .templateGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

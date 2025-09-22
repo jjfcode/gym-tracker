@@ -2,16 +2,19 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
-import { Button, Input, Card } from '../../../components/ui';
+import { Button } from '../../../components/ui/Button/Button';
+import { Input } from '../../../components/ui/Input/Input';
+import { Card } from '../../../components/ui/Card/Card';
 import { useAuth } from '../AuthContext';
 import { resetPasswordSchema, type ResetPasswordFormData } from '../../../lib/validations/auth';
 import styles from './AuthForms.module.css';
 
 interface ResetPasswordFormProps {
   onSuccess?: () => void;
+  onNavigateToSignIn?: () => void;
 }
 
-export function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps) {
+export function ResetPasswordForm({ onSuccess, onNavigateToSignIn }: ResetPasswordFormProps) {
   const { resetPassword, isLoading, error, clearError } = useAuth();
   const [isEmailSent, setIsEmailSent] = useState(false);
   
@@ -65,9 +68,15 @@ export function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps) {
         </div>
 
         <div className={styles.authFooter}>
-          <Link to="/auth/signin" className={styles.link}>
-            Back to Sign In
-          </Link>
+          {onNavigateToSignIn ? (
+            <Button variant="link" onClick={onNavigateToSignIn}>
+              Back to Sign In
+            </Button>
+          ) : (
+            <Link to="/auth/signin" className={styles.link}>
+              Back to Sign In
+            </Link>
+          )}
         </div>
       </Card>
     );
@@ -115,9 +124,15 @@ export function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps) {
       <div className={styles.authFooter}>
         <p>
           Remember your password?{' '}
-          <Link to="/auth/signin" className={styles.link}>
-            Sign in
-          </Link>
+          {onNavigateToSignIn ? (
+            <Button variant="link" onClick={onNavigateToSignIn}>
+              Sign in
+            </Button>
+          ) : (
+            <Link to="/auth/signin" className={styles.link}>
+              Sign in
+            </Link>
+          )}
         </p>
       </div>
     </Card>

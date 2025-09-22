@@ -2,16 +2,20 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
-import { Button, Input, Card } from '../../../components/ui';
+import { Button } from '../../../components/ui/Button/Button';
+import { Input } from '../../../components/ui/Input/Input';
+import { Card } from '../../../components/ui/Card/Card';
 import { useAuth } from '../AuthContext';
 import { signInSchema, type SignInFormData } from '../../../lib/validations/auth';
 import styles from './AuthForms.module.css';
 
 interface SignInFormProps {
   onSuccess?: () => void;
+  onNavigateToSignUp?: () => void;
+  onNavigateToReset?: () => void;
 }
 
-export function SignInForm({ onSuccess }: SignInFormProps) {
+export function SignInForm({ onSuccess, onNavigateToSignUp, onNavigateToReset }: SignInFormProps) {
   const { signIn, isLoading, error, clearError } = useAuth();
   
   const {
@@ -84,18 +88,30 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
         </div>
 
         <div className={styles.formFooter}>
-          <Link to="/auth/reset-password" className={styles.link}>
-            Forgot your password?
-          </Link>
+          {onNavigateToReset ? (
+            <Button variant="link" onClick={onNavigateToReset}>
+              Forgot your password?
+            </Button>
+          ) : (
+            <Link to="/auth/reset-password" className={styles.link}>
+              Forgot your password?
+            </Link>
+          )}
         </div>
       </form>
 
       <div className={styles.authFooter}>
         <p>
           Don't have an account?{' '}
-          <Link to="/auth/signup" className={styles.link}>
-            Sign up
-          </Link>
+          {onNavigateToSignUp ? (
+            <Button variant="link" onClick={onNavigateToSignUp}>
+              Sign up
+            </Button>
+          ) : (
+            <Link to="/auth/signup" className={styles.link}>
+              Sign up
+            </Link>
+          )}
         </p>
       </div>
     </Card>

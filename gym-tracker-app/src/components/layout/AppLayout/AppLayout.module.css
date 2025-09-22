@@ -117,4 +117,86 @@
     background-color: var(--color-surface);
     border-color: var(--color-border);
   }
+}/*
+ User menu styles */
+.userMenu {
+  position: relative;
+}
+
+.userButton {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.userDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-2);
+  min-width: 200px;
+  z-index: var(--z-dropdown);
+  margin-top: var(--space-1);
+}
+
+.userInfo {
+  padding: var(--space-2);
+}
+
+.userName {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-1) 0;
+  font-size: var(--font-size-sm);
+}
+
+.userEmail {
+  color: var(--color-text-secondary);
+  margin: 0;
+  font-size: var(--font-size-xs);
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: var(--space-2) 0;
+}
+
+.signOutButton {
+  width: 100%;
+  justify-content: flex-start;
+  color: var(--color-error-600);
+}
+
+.signOutButton:hover {
+  background-color: var(--color-error-50);
+  color: var(--color-error-700);
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-overlay);
+  background: transparent;
+}
+
+/* Mobile user menu adjustments */
+@media (max-width: 640px) {
+  .userButton {
+    max-width: 100px;
+  }
+  
+  .userDropdown {
+    right: var(--space-2);
+    left: var(--space-2);
+    min-width: auto;
+  }
 }
