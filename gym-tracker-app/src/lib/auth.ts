@@ -64,7 +64,7 @@ export class AuthService {
       }
 
       // Fetch user profile
-      const profile = await this.fetchUserProfile(authData.user.id);
+      const profile = await this.fetchUserProfile(authData.user.id) || this.createDefaultProfile(authData.user.id);
       
       return {
         ...authData.user,
@@ -134,7 +134,7 @@ export class AuthService {
         locale: 'en',
         units: 'imperial', // Default to imperial
         theme: 'system',
-      });
+      }) || this.createDefaultProfile(authData.user.id);
 
       return {
         ...authData.user,
@@ -213,30 +213,26 @@ export class AuthService {
       throw new Error(passwordValidation.errors[0]);
     }
 
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: data.password,
-      });
+    const { error } = await supabase.auth.updateUser({
+      password: data.password,
+    });
 
-      if (error) {
-        const { data: { user } } = await supabase.auth.getUser();
-        await SecurityService.logSecurityEvent('failed_login', {
-          userId: user?.id,
-          action: 'password_update',
-          error: error.message,
-        }, 'medium');
-        throw new Error(this.getErrorMessage(error));
-      }
-
-      // Log successful password update
+    if (error) {
       const { data: { user } } = await supabase.auth.getUser();
-      await SecurityService.logSecurityEvent('suspicious_activity', {
+      await SecurityService.logSecurityEvent('failed_login', {
         userId: user?.id,
-        action: 'password_updated',
-      }, 'low');
-    } catch (error) {
-      throw error;
+        action: 'password_update',
+        error: error.message,
+      }, 'medium');
+      throw new Error(this.getErrorMessage(error));
     }
+
+    // Log successful password update
+    const { data: { user } } = await supabase.auth.getUser();
+    await SecurityService.logSecurityEvent('suspicious_activity', {
+      userId: user?.id,
+      action: 'password_updated',
+    }, 'low');
   }
 
   // Get current session
@@ -246,7 +242,7 @@ export class AuthService {
       
       // Add timeout to prevent hanging
       const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('getSession timeout')), 5000)
+        setTimeout(() => reject(new Error('getSession timeout')), 10000) // Increased timeout
       );
       
       const sessionPromise = supabase.auth.getSession();
@@ -269,8 +265,8 @@ export class AuthService {
       }
 
       console.log('Session found, fetching profile for user:', session.user.id);
-      // Fetch user profile
-      const profile = await this.fetchUserProfile(session.user.id);
+      // Fetch user profile - ensure we always get a profile
+      const profile = await this.fetchUserProfile(session.user.id) || this.createDefaultProfile(session.user.id);
       console.log('Profile fetched:', !!profile);
       
       const result = {
@@ -295,7 +291,7 @@ export class AuthService {
       
       // Add timeout to prevent hanging
       const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('fetchUserProfile timeout')), 5000)
+        setTimeout(() => reject(new Error('fetchUserProfile timeout')), 10000) // Increased timeout
       );
       
       const profilePromise = supabase
@@ -312,8 +308,13 @@ export class AuthService {
       if (error) {
         console.log('Profile fetch error:', error);
         // If table doesn't exist, create a default profile
-        if (error.code === 'PGRST116' || error.message.includes('relation "profile" does not exist')) {
+        if (error.code === 'PGRST116' || error.message.includes('relation "profile" does not exist') || error.code === '42P01') {
           console.warn('Profile table does not exist, creating default profile');
+          return this.createDefaultProfile(userId);
+        }
+        // If user doesn't have a profile yet (404 or 406), create default
+        if (error.code === 'PGRST116' || error.message.includes('406') || error.details?.includes('No rows found')) {
+          console.warn('Profile not found for user, creating default profile');
           return this.createDefaultProfile(userId);
         }
         console.error('Error fetching profile:', error);
@@ -322,7 +323,17 @@ export class AuthService {
       }
 
       console.log('Profile fetched successfully:', data);
-      return data;
+      // Ensure the profile has all required fields
+      return {
+        id: data.user_id, // Add missing id field
+        user_id: data.user_id,
+        display_name: data.display_name || '', // Handle null case
+        locale: (data.locale as 'en' | 'es') || 'en',
+        units: (data.units as 'metric' | 'imperial') || 'imperial',
+        theme: (data.theme as 'dark' | 'light' | 'system') || 'system',
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+      };
     } catch (error) {
       console.error('Error fetching profile:', error);
       if (error instanceof Error && error.message === 'fetchUserProfile timeout') {
@@ -375,7 +386,17 @@ export class AuthService {
         return this.createDefaultProfile(userId);
       }
 
-      return data;
+      // Add missing id field
+      return {
+        id: data.user_id,
+        user_id: data.user_id,
+        display_name: data.display_name || '',
+        locale: (data.locale as 'en' | 'es') || 'en',
+        units: (data.units as 'metric' | 'imperial') || 'imperial',
+        theme: (data.theme as 'dark' | 'light' | 'system') || 'system',
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+      };
     } catch (error) {
       console.error('Error creating profile:', error);
       return this.createDefaultProfile(userId);
@@ -412,7 +433,17 @@ export class AuthService {
         return undefined;
       }
 
-      return data;
+      // Add missing id field
+      return {
+        id: data.user_id,
+        user_id: data.user_id,
+        display_name: data.display_name || '',
+        locale: (data.locale as 'en' | 'es') || 'en',
+        units: (data.units as 'metric' | 'imperial') || 'imperial',
+        theme: (data.theme as 'dark' | 'light' | 'system') || 'system',
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+      };
     } catch (error) {
       console.error('Error updating profile:', error);
       return undefined;
