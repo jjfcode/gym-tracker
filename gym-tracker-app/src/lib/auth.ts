@@ -132,7 +132,7 @@ export class AuthService {
       const profile = await this.createUserProfile(authData.user.id, {
         display_name: sanitizedDisplayName,
         locale: 'en',
-        units: 'imperial',
+        units: 'imperial', // Default to imperial
         theme: 'system',
       });
 
@@ -340,7 +340,7 @@ export class AuthService {
       user_id: userId,
       display_name: '',
       locale: 'en',
-      units: 'imperial',
+      units: 'imperial', // Default to imperial
       theme: 'system',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),

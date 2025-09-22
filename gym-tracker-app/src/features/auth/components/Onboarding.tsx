@@ -15,6 +15,7 @@ interface OnboardingData {
   fitness_goal: string;
   experience_level: string;
   workout_frequency: number;
+  units: 'metric' | 'imperial';
 }
 
 const Onboarding: React.FC = () => {
@@ -26,29 +27,46 @@ const Onboarding: React.FC = () => {
     fitness_goal: '',
     experience_level: '',
     workout_frequency: 3,
+    units: 'imperial', // Default to imperial
   });
 
   const completeOnboardingMutation = useMutation({
     mutationFn: async (data: OnboardingData) => {
+      console.log('Starting onboarding completion...');
+      
       try {
-        // Try to update user profile
-        const { error: profileError } = await supabase
+        // Add timeout to profile update
+        const profileUpdatePromise = supabase
           .from('profile')
           .update({
             display_name: data.full_name,
-            // Add other profile fields as needed
+            units: data.units,
           })
           .eq('user_id', user!.id);
 
-        // If profile table doesn't exist, that's okay - we'll store in local state
-        if (profileError && !profileError.message.includes('relation "profile" does not exist')) {
-          console.warn('Profile update failed, but continuing:', profileError);
+        const profileTimeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Profile update timeout')), 5000)
+        );
+
+        try {
+          const { error: profileError } = await Promise.race([
+            profileUpdatePromise,
+            profileTimeoutPromise
+          ]);
+
+          if (profileError) {
+            console.warn('Profile update failed, but continuing:', profileError);
+          } else {
+            console.log('Profile updated successfully');
+          }
+        } catch (error) {
+          console.warn('Profile update timed out or failed, but continuing:', error);
         }
 
-        // Try to log initial weight if provided
+        // Try to log initial weight if provided (with timeout)
         if (data.weight) {
           try {
-            const { error: weightError } = await supabase
+            const weightInsertPromise = supabase
               .from('weight_logs')
               .insert({
                 user_id: user!.id,
@@ -57,14 +75,26 @@ const Onboarding: React.FC = () => {
                 note: 'Initial weight from onboarding',
               });
 
-            if (weightError && !weightError.message.includes('relation "weight_logs" does not exist')) {
+            const weightTimeoutPromise = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Weight insert timeout')), 5000)
+            );
+
+            const { error: weightError } = await Promise.race([
+              weightInsertPromise,
+              weightTimeoutPromise
+            ]);
+
+            if (weightError) {
               console.warn('Weight logging failed, but continuing:', weightError);
+            } else {
+              console.log('Weight logged successfully');
             }
           } catch (error) {
-            console.warn('Weight logging failed, but continuing:', error);
+            console.warn('Weight logging timed out or failed, but continuing:', error);
           }
         }
 
+        console.log('Onboarding completion finished');
         return data;
       } catch (error) {
         console.warn('Onboarding data save failed, but continuing:', error);
@@ -72,6 +102,12 @@ const Onboarding: React.FC = () => {
       }
     },
     onSuccess: () => {
+      console.log('Onboarding completed, navigating to dashboard');
+      navigate('/dashboard');
+    },
+    onError: (error) => {
+      console.error('Onboarding mutation failed:', error);
+      // Still navigate to dashboard even if there's an error
       navigate('/dashboard');
     },
   });
@@ -84,7 +120,16 @@ const Onboarding: React.FC = () => {
     if (step < 3) {
       setStep(step + 1);
     } else {
+      console.log('Starting onboarding with data:', formData);
       completeOnboardingMutation.mutate(formData);
+      
+      // Fallback: if mutation doesn't complete in 15 seconds, navigate anyway
+      setTimeout(() => {
+        if (completeOnboardingMutation.isPending) {
+          console.warn('Onboarding taking too long, navigating to dashboard anyway');
+          navigate('/dashboard');
+        }
+      }, 15000);
     }
   };
 
@@ -121,7 +166,7 @@ const Onboarding: React.FC = () => {
                 type="number"
                 value={formData.weight || ''}
                 onChange={(e) => handleInputChange('weight', Number(e.target.value))}
-                placeholder="Weight in kg"
+                placeholder={formData.units === 'imperial' ? 'Weight in lbs' : 'Weight in kg'}
               />
             </div>
 
@@ -132,8 +177,34 @@ const Onboarding: React.FC = () => {
                 type="number"
                 value={formData.height || ''}
                 onChange={(e) => handleInputChange('height', Number(e.target.value))}
-                placeholder="Height in cm"
+                placeholder={formData.units === 'imperial' ? 'Height in inches' : 'Height in cm'}
               />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>Unit System</label>
+              <div className={styles.optionGrid}>
+                <button
+                  type="button"
+                  className={`${styles.optionCard} ${
+                    formData.units === 'imperial' ? styles.selected : ''
+                  }`}
+                  onClick={() => handleInputChange('units', 'imperial')}
+                >
+                  <span className={styles.optionLabel}>Imperial</span>
+                  <span className={styles.optionDesc}>lbs, inches, °F</span>
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.optionCard} ${
+                    formData.units === 'metric' ? styles.selected : ''
+                  }`}
+                  onClick={() => handleInputChange('units', 'metric')}
+                >
+                  <span className={styles.optionLabel}>Metric</span>
+                  <span className={styles.optionDesc}>kg, cm, °C</span>
+                </button>
+              </div>
             </div>
           </div>
         );

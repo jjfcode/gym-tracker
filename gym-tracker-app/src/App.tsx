@@ -67,9 +67,7 @@ const AppRoutes: React.FC = () => {
   );
 };
 
-// Import the debug components
-import { AuthDebug } from './components/AuthDebug';
-import { SupabaseTest } from './components/SupabaseTest';
+
 
 function App() {
   return (
@@ -81,13 +79,7 @@ function App() {
               <AppRoutes />
             </Suspense>
             
-            {/* Debug Components - Remove these in production */}
-            {import.meta.env.DEV && (
-              <>
-                <AuthDebug />
-                <SupabaseTest />
-              </>
-            )}
+
             
             {/* PWA Components */}
             <OfflineIndicator />
