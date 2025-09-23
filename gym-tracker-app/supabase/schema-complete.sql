@@ -55,43 +55,76 @@ CREATE TABLE IF NOT EXISTS public.workouts (
   id BIGSERIAL PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   plan_id BIGINT REFERENCES public.plans(id) ON DELETE CASCADE,
-  date DATE NOT NULL,
-  title TEXT NOT NULL,
-  name TEXT NOT NULL DEFAULT '', -- Required by app
-  status TEXT DEFAULT 'planned' CHECK (status IN ('planned', 'active', 'completed', 'skipped')),
+  template_id BIGINT,
+  date DATE DEFAULT CURRENT_DATE,
+  title TEXT DEFAULT '',
+  name TEXT DEFAULT '', -- Required by app
+  status TEXT DEFAULT 'planned' CHECK (status IN ('planned', 'active', 'completed', 'skipped', 'in_progress')),
   is_completed BOOLEAN DEFAULT FALSE,
   started_at TIMESTAMPTZ,
   completed_at TIMESTAMPTZ,
   duration_minutes INTEGER CHECK (duration_minutes > 0),
   notes TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE (user_id, date)
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Add missing columns to existing workouts table (simple migration)
-ALTER TABLE public.workouts ADD COLUMN IF NOT EXISTS name TEXT NOT NULL DEFAULT '';
-ALTER TABLE public.workouts ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'planned' CHECK (status IN ('planned', 'active', 'completed', 'skipped'));
+ALTER TABLE public.workouts ADD COLUMN IF NOT EXISTS name TEXT DEFAULT '';
+ALTER TABLE public.workouts ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'planned';
 ALTER TABLE public.workouts ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ;
 ALTER TABLE public.workouts ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
+ALTER TABLE public.workouts ADD COLUMN IF NOT EXISTS template_id BIGINT;
+
+-- Remove NOT NULL constraint from date column to allow defaults
+ALTER TABLE public.workouts ALTER COLUMN date DROP NOT NULL;
+ALTER TABLE public.workouts ALTER COLUMN date SET DEFAULT CURRENT_DATE;
+ALTER TABLE public.workouts ALTER COLUMN title DROP NOT NULL;
+ALTER TABLE public.workouts ALTER COLUMN title SET DEFAULT '';
+
+-- Drop unique constraint that might prevent multiple workouts per day
+ALTER TABLE public.workouts DROP CONSTRAINT IF EXISTS workouts_user_id_date_key;
+
+-- Fix exercise_sets foreign key relationship
+ALTER TABLE public.exercise_sets DROP CONSTRAINT IF EXISTS exercise_sets_exercise_id_fkey;
+ALTER TABLE public.exercise_sets ADD COLUMN IF NOT EXISTS workout_exercise_id BIGINT;
+ALTER TABLE public.exercise_sets ADD CONSTRAINT exercise_sets_workout_exercise_id_fkey 
+  FOREIGN KEY (workout_exercise_id) REFERENCES public.workout_exercises(id) ON DELETE CASCADE;
+
+-- Fix exercises table to be exercise definitions instead of workout-specific
+ALTER TABLE public.exercises DROP CONSTRAINT IF EXISTS exercises_workout_id_fkey;
+ALTER TABLE public.exercises DROP COLUMN IF EXISTS workout_id;
+ALTER TABLE public.exercises DROP COLUMN IF EXISTS order_index;
+ALTER TABLE public.exercises DROP COLUMN IF EXISTS target_sets;
+ALTER TABLE public.exercises DROP COLUMN IF EXISTS target_reps;
+ALTER TABLE public.exercises ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'strength';
+ALTER TABLE public.exercises ADD COLUMN IF NOT EXISTS muscle_groups TEXT[];
+
+-- Add unique constraint for exercise slugs per user
+ALTER TABLE public.exercises DROP CONSTRAINT IF EXISTS exercises_user_id_slug_key;
+ALTER TABLE public.exercises ADD CONSTRAINT exercises_user_id_slug_unique UNIQUE (user_id, slug);
 
 -- Update existing records to have proper names and status
 UPDATE public.workouts 
-SET name = COALESCE(NULLIF(name, ''), title),
-    status = COALESCE(status, CASE WHEN is_completed = true THEN 'completed' ELSE 'planned' END)
-WHERE name = '' OR name IS NULL OR status IS NULL;
+SET name = COALESCE(NULLIF(name, ''), title, 'Workout'),
+    status = COALESCE(status, CASE WHEN is_completed = true THEN 'completed' ELSE 'planned' END),
+    date = COALESCE(date, CURRENT_DATE),
+    title = COALESCE(NULLIF(title, ''), name, 'Workout')
+WHERE name = '' OR name IS NULL OR status IS NULL OR date IS NULL OR title = '' OR title IS NULL;
 
--- Create exercises table
+-- Update status constraint to include in_progress
+ALTER TABLE public.workouts DROP CONSTRAINT IF EXISTS workouts_status_check;
+ALTER TABLE public.workouts ADD CONSTRAINT workouts_status_check CHECK (status IN ('planned', 'active', 'completed', 'skipped', 'in_progress'));
+
+-- Create exercises table (exercise definitions/library)
 CREATE TABLE IF NOT EXISTS public.exercises (
   id BIGSERIAL PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  workout_id BIGINT NOT NULL REFERENCES public.workouts(id) ON DELETE CASCADE,
   slug TEXT NOT NULL,
   name_en TEXT NOT NULL,
   name_es TEXT NOT NULL,
   machine_brand TEXT,
-  order_index INTEGER DEFAULT 0,
-  target_sets INTEGER DEFAULT 3 CHECK (target_sets > 0 AND target_sets <= 20),
-  target_reps INTEGER DEFAULT 10 CHECK (target_reps > 0 AND target_reps <= 100),
+  category TEXT DEFAULT 'strength',
+  muscle_groups TEXT[],
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -99,7 +132,7 @@ CREATE TABLE IF NOT EXISTS public.exercises (
 CREATE TABLE IF NOT EXISTS public.exercise_sets (
   id BIGSERIAL PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  exercise_id BIGINT NOT NULL REFERENCES public.exercises(id) ON DELETE CASCADE,
+  workout_exercise_id BIGINT NOT NULL REFERENCES public.workout_exercises(id) ON DELETE CASCADE,
   set_index INTEGER NOT NULL CHECK (set_index > 0),
   weight NUMERIC(6,2) CHECK (weight > 0),
   reps INTEGER CHECK (reps > 0 AND reps <= 100),
@@ -132,6 +165,7 @@ CREATE TABLE IF NOT EXISTS public.template_exercises (
   order_index INTEGER DEFAULT 0,
   target_sets INTEGER DEFAULT 3 CHECK (target_sets > 0 AND target_sets <= 20),
   target_reps INTEGER DEFAULT 10 CHECK (target_reps > 0 AND target_reps <= 100),
+  target_weight NUMERIC(6,2),
   rest_seconds INTEGER DEFAULT 60,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -145,6 +179,7 @@ CREATE TABLE IF NOT EXISTS public.workout_exercises (
   order_index INTEGER DEFAULT 0,
   target_sets INTEGER DEFAULT 3 CHECK (target_sets > 0 AND target_sets <= 20),
   target_reps INTEGER DEFAULT 10 CHECK (target_reps > 0 AND target_reps <= 100),
+  target_weight NUMERIC(6,2),
   rest_seconds INTEGER DEFAULT 60,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -236,11 +271,12 @@ CREATE INDEX IF NOT EXISTS idx_workouts_user_date ON public.workouts(user_id, da
 CREATE INDEX IF NOT EXISTS idx_workouts_plan_id ON public.workouts(plan_id);
 
 -- Exercises indexes
-CREATE INDEX IF NOT EXISTS idx_exercises_workout_id ON public.exercises(workout_id);
 CREATE INDEX IF NOT EXISTS idx_exercises_user_id ON public.exercises(user_id);
+CREATE INDEX IF NOT EXISTS idx_exercises_slug ON public.exercises(user_id, slug);
+CREATE INDEX IF NOT EXISTS idx_exercises_category ON public.exercises(category);
 
 -- Exercise sets indexes
-CREATE INDEX IF NOT EXISTS idx_exercise_sets_exercise_id ON public.exercise_sets(exercise_id);
+CREATE INDEX IF NOT EXISTS idx_exercise_sets_workout_exercise_id ON public.exercise_sets(workout_exercise_id);
 CREATE INDEX IF NOT EXISTS idx_exercise_sets_user_id ON public.exercise_sets(user_id);
 
 -- Workout schedules indexes
@@ -709,3 +745,15 @@ ON CONFLICT (user_id) DO UPDATE SET
   units = EXCLUDED.units,
   theme = EXCLUDED.theme,
   updated_at = NOW();
+
+-- Create basic exercise library for your user
+INSERT INTO public.exercises (user_id, slug, name_en, name_es, category, muscle_groups) VALUES
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'bench-press', 'Bench Press', 'Press de Banca', 'strength', ARRAY['chest', 'triceps', 'shoulders']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'squat', 'Squat', 'Sentadilla', 'strength', ARRAY['quadriceps', 'glutes', 'hamstrings']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'deadlift', 'Deadlift', 'Peso Muerto', 'strength', ARRAY['hamstrings', 'glutes', 'back']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'overhead-press', 'Overhead Press', 'Press Militar', 'strength', ARRAY['shoulders', 'triceps', 'core']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'pull-ups', 'Pull-ups', 'Dominadas', 'strength', ARRAY['lats', 'biceps', 'rhomboids']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'rows', 'Barbell Rows', 'Remo con Barra', 'strength', ARRAY['lats', 'rhomboids', 'biceps']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'dips', 'Dips', 'Fondos', 'strength', ARRAY['triceps', 'chest', 'shoulders']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'lunges', 'Lunges', 'Zancadas', 'strength', ARRAY['quadriceps', 'glutes', 'hamstrings'])
+ON CONFLICT (user_id, slug) DO NOTHING;
