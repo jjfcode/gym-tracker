@@ -50,14 +50,14 @@ CREATE TABLE IF NOT EXISTS public.plans (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Create workouts table
+-- Create workouts table with all required columns
 CREATE TABLE IF NOT EXISTS public.workouts (
   id BIGSERIAL PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   plan_id BIGINT REFERENCES public.plans(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   title TEXT NOT NULL,
-  name TEXT NOT NULL, -- Required by app
+  name TEXT NOT NULL DEFAULT '', -- Required by app
   status TEXT DEFAULT 'planned' CHECK (status IN ('planned', 'active', 'completed', 'skipped')),
   is_completed BOOLEAN DEFAULT FALSE,
   started_at TIMESTAMPTZ,
@@ -67,6 +67,18 @@ CREATE TABLE IF NOT EXISTS public.workouts (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE (user_id, date)
 );
+
+-- Add missing columns to existing workouts table (simple migration)
+ALTER TABLE public.workouts ADD COLUMN IF NOT EXISTS name TEXT NOT NULL DEFAULT '';
+ALTER TABLE public.workouts ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'planned' CHECK (status IN ('planned', 'active', 'completed', 'skipped'));
+ALTER TABLE public.workouts ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ;
+ALTER TABLE public.workouts ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
+
+-- Update existing records to have proper names and status
+UPDATE public.workouts 
+SET name = COALESCE(NULLIF(name, ''), title),
+    status = COALESCE(status, CASE WHEN is_completed = true THEN 'completed' ELSE 'planned' END)
+WHERE name = '' OR name IS NULL OR status IS NULL;
 
 -- Create exercises table
 CREATE TABLE IF NOT EXISTS public.exercises (
