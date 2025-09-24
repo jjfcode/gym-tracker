@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Card } from '../../../components/ui/Card/Card';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '../../../components/ui/Button/Button';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner/LoadingSpinner';
-import { WeeklyCalendar } from './WeeklyCalendar';
-import { MonthlyCalendar } from './MonthlyCalendar';
+import WeeklyCalendar from './WeeklyCalendar/WeeklyCalendar';
+import MonthlyCalendar from './MonthlyCalendar/MonthlyCalendar';
 import { WorkoutScheduler } from './WorkoutScheduler';
 import { useAuth } from '../../auth/AuthContext';
+import { useCalendarNavigation } from '../hooks/useCalendarNavigation';
 import { planningService } from '../../../lib/planning-service';
+import { createWorkoutForDate } from '../services/calendarService';
+import type { WorkoutSummary } from '../types';
 import styles from './WorkoutPlanning.module.css';
 
 type PlanningView = 'week' | 'month' | 'schedule';
@@ -15,23 +17,57 @@ type PlanningView = 'week' | 'month' | 'schedule';
 const WorkoutPlanning: React.FC = () => {
   const { user } = useAuth();
   const [activeView, setActiveView] = useState<PlanningView>('week');
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const queryClient = useQueryClient();
+  
+  // Calendar navigation
+  const navigation = useCalendarNavigation(new Date(), activeView === 'week' ? 'week' : 'month');
 
-  // Get workout schedule
+  // Create workout mutation
+  const createWorkoutMutation = useMutation({
+    mutationFn: async (date: string) => {
+      return createWorkoutForDate(date, 'New Workout');
+    },
+    onSuccess: () => {
+      // Invalidate queries to refetch data
+      queryClient.invalidateQueries({ queryKey: ['calendar'] });
+      queryClient.invalidateQueries({ queryKey: ['plannedWorkouts'] });
+      queryClient.invalidateQueries({ queryKey: ['workoutSchedule'] });
+    },
+  });
+
+  // Handle creating a new workout
+  const handleAddWorkout = async () => {
+    const today = new Date().toISOString().split('T')[0] as string;
+    try {
+      const workoutId = await createWorkoutMutation.mutateAsync(today);
+      console.log('Workout created with ID:', workoutId);
+      // Could add success notification here
+    } catch (error) {
+      console.error('Failed to create workout:', error);
+      // Could add error notification here
+    }
+  };
+
+  // Get workout schedule for the schedule view only
   const { data: workoutSchedule, isLoading } = useQuery({
     queryKey: ['workoutSchedule', user?.id],
     queryFn: () => planningService.getWorkoutSchedule(user!.id),
-    enabled: !!user?.id,
+    enabled: !!user?.id && activeView === 'schedule',
   });
 
-  // Get planned workouts for current period
-  const { data: plannedWorkouts } = useQuery({
-    queryKey: ['plannedWorkouts', user?.id, selectedDate],
-    queryFn: () => planningService.getPlannedWorkouts(user!.id, selectedDate),
-    enabled: !!user?.id,
-  });
+  // Handle day clicks from calendar
+  const handleDayClick = (date: string, workout?: WorkoutSummary) => {
+    console.log('Day clicked:', date, workout);
+    // Could navigate to workout detail or create new workout
+  };
 
-  if (isLoading) {
+  // Handle view mode changes
+  const handleViewModeChange = (mode: 'week' | 'month') => {
+    navigation.setViewMode(mode);
+    setActiveView(mode);
+  };
+
+  if (isLoading && activeView === 'schedule') {
     return <LoadingSpinner />;
   }
 
@@ -40,27 +76,25 @@ const WorkoutPlanning: React.FC = () => {
       case 'week':
         return (
           <WeeklyCalendar
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-            workouts={plannedWorkouts}
-            onWorkoutClick={(workout) => console.log('Workout clicked:', workout)}
+            navigation={navigation}
+            onDayClick={handleDayClick}
+            onViewModeChange={handleViewModeChange}
           />
         );
         
       case 'month':
         return (
           <MonthlyCalendar
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-            workouts={plannedWorkouts}
-            onWorkoutClick={(workout) => console.log('Workout clicked:', workout)}
+            navigation={navigation}
+            onDayClick={handleDayClick}
+            onViewModeChange={handleViewModeChange}
           />
         );
         
       case 'schedule':
         return (
           <WorkoutScheduler
-            schedule={workoutSchedule}
+            schedule={workoutSchedule || []}
             onScheduleUpdate={(newSchedule) => console.log('Schedule updated:', newSchedule)}
           />
         );
@@ -71,30 +105,40 @@ const WorkoutPlanning: React.FC = () => {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <div className={styles.titleSection}>
+    <div className={styles['container']}>
+      <div className={styles['header']}>
+        <div className={styles['titleSection']}>
           <h1>Workout Planning</h1>
           <p>Plan and schedule your workouts for optimal results</p>
         </div>
         
-        <div className={styles.actions}>
-          <Button variant="primary">
-            Add Workout
+        <div className={styles['actions']}>
+          <Button 
+            variant="primary"
+            onClick={handleAddWorkout}
+            disabled={createWorkoutMutation.isPending}
+          >
+            {createWorkoutMutation.isPending ? 'Creating...' : 'Add Workout'}
           </Button>
         </div>
       </div>
 
-      <div className={styles.navigation}>
+      <div className={styles['navigation']}>
         <Button
           variant={activeView === 'week' ? 'primary' : 'ghost'}
-          onClick={() => setActiveView('week')}
+          onClick={() => {
+            setActiveView('week');
+            navigation.setViewMode('week');
+          }}
         >
           Week View
         </Button>
         <Button
           variant={activeView === 'month' ? 'primary' : 'ghost'}
-          onClick={() => setActiveView('month')}
+          onClick={() => {
+            setActiveView('month');
+            navigation.setViewMode('month');
+          }}
         >
           Month View
         </Button>
@@ -106,59 +150,8 @@ const WorkoutPlanning: React.FC = () => {
         </Button>
       </div>
 
-      <div className={styles.content}>
+      <div className={styles['content']}>
         {renderContent()}
-      </div>
-
-      {/* Quick Stats */}
-      <div className={styles.quickStats}>
-        <Card className={styles.statCard}>
-          <h3>This Week</h3>
-          <div className={styles.statGrid}>
-            <div className={styles.statItem}>
-              <span className={styles.statValue}>
-                {plannedWorkouts?.thisWeek?.planned || 0}
-              </span>
-              <span className={styles.statLabel}>Planned</span>
-            </div>
-            <div className={styles.statItem}>
-              <span className={styles.statValue}>
-                {plannedWorkouts?.thisWeek?.completed || 0}
-              </span>
-              <span className={styles.statLabel}>Completed</span>
-            </div>
-            <div className={styles.statItem}>
-              <span className={styles.statValue}>
-                {plannedWorkouts?.thisWeek?.remaining || 0}
-              </span>
-              <span className={styles.statLabel}>Remaining</span>
-            </div>
-          </div>
-        </Card>
-
-        <Card className={styles.statCard}>
-          <h3>This Month</h3>
-          <div className={styles.statGrid}>
-            <div className={styles.statItem}>
-              <span className={styles.statValue}>
-                {plannedWorkouts?.thisMonth?.planned || 0}
-              </span>
-              <span className={styles.statLabel}>Planned</span>
-            </div>
-            <div className={styles.statItem}>
-              <span className={styles.statValue}>
-                {plannedWorkouts?.thisMonth?.completed || 0}
-              </span>
-              <span className={styles.statLabel}>Completed</span>
-            </div>
-            <div className={styles.statItem}>
-              <span className={styles.statValue}>
-                {Math.round((plannedWorkouts?.thisMonth?.completed || 0) / (plannedWorkouts?.thisMonth?.planned || 1) * 100)}%
-              </span>
-              <span className={styles.statLabel}>Success Rate</span>
-            </div>
-          </div>
-        </Card>
       </div>
     </div>
   );
