@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Card } from '../../../components/ui/Card/Card';
 import { Button } from '../../../components/ui/Button/Button';
 import { Input } from '../../../components/ui/Input/Input';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../useAuth';
 import { supabase } from '../../../lib/supabase';
 import styles from './Onboarding.module.css';
 

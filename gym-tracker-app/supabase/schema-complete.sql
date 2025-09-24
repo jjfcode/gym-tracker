@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS public.profile (
   locale TEXT DEFAULT 'en' CHECK (locale IN ('en', 'es')),
   units TEXT DEFAULT 'imperial' CHECK (units IN ('metric', 'imperial')),
   theme TEXT DEFAULT 'dark' CHECK (theme IN ('dark', 'light', 'system')),
+  timezone TEXT DEFAULT 'UTC',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -21,7 +22,7 @@ CREATE TABLE IF NOT EXISTS public.profile (
 CREATE TABLE IF NOT EXISTS public.weight_logs (
   id BIGSERIAL PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  measured_at DATE NOT NULL,
+  measured_at DATE NOT NULL DEFAULT CURRENT_DATE,
   weight NUMERIC(6,2) NOT NULL CHECK (weight > 0 AND weight < 1000),
   note TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -32,7 +33,7 @@ CREATE TABLE IF NOT EXISTS public.weight_logs (
 CREATE TABLE IF NOT EXISTS public.weight_entries (
   id BIGSERIAL PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  date DATE NOT NULL,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
   weight NUMERIC(6,2) NOT NULL CHECK (weight > 0 AND weight < 1000),
   note TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -100,6 +101,40 @@ CREATE TABLE IF NOT EXISTS public.exercises (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Create equipment table
+CREATE TABLE IF NOT EXISTS public.equipment (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE, -- NULL for system equipment
+  created_by UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  slug TEXT NOT NULL,
+  name_en TEXT NOT NULL,
+  name_es TEXT NOT NULL,
+  category TEXT NOT NULL,
+  subcategory TEXT,
+  brand TEXT,
+  model TEXT,
+  description TEXT,
+  is_available BOOLEAN DEFAULT TRUE,
+  maintenance_notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Add unique constraint for equipment slugs per user (similar to exercises)
+ALTER TABLE public.equipment DROP CONSTRAINT IF EXISTS equipment_user_id_slug_key;
+
+-- Only add the constraint if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_name = 'equipment_user_id_slug_unique' 
+        AND table_name = 'equipment'
+    ) THEN
+        ALTER TABLE public.equipment ADD CONSTRAINT equipment_user_id_slug_unique UNIQUE (user_id, slug);
+    END IF;
+END $$;
+
 -- Create workout_exercises table (link workouts to exercises) - MOVED UP
 CREATE TABLE IF NOT EXISTS public.workout_exercises (
   id BIGSERIAL PRIMARY KEY,
@@ -141,6 +176,9 @@ ALTER TABLE public.exercises ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES
 
 -- Make user_id nullable for system exercises
 ALTER TABLE public.exercises ALTER COLUMN user_id DROP NOT NULL;
+
+-- Add timezone column to existing profile table if it doesn't exist
+ALTER TABLE public.profile ADD COLUMN IF NOT EXISTS timezone TEXT DEFAULT 'UTC';
 
 -- Add unique constraint for exercise slugs per user
 ALTER TABLE public.exercises DROP CONSTRAINT IF EXISTS exercises_user_id_slug_key;
@@ -300,6 +338,12 @@ CREATE INDEX IF NOT EXISTS idx_exercises_user_id ON public.exercises(user_id);
 CREATE INDEX IF NOT EXISTS idx_exercises_slug ON public.exercises(user_id, slug);
 CREATE INDEX IF NOT EXISTS idx_exercises_category ON public.exercises(category);
 
+-- Equipment indexes
+CREATE INDEX IF NOT EXISTS idx_equipment_user_id ON public.equipment(user_id);
+CREATE INDEX IF NOT EXISTS idx_equipment_category ON public.equipment(category);
+CREATE INDEX IF NOT EXISTS idx_equipment_available ON public.equipment(is_available);
+CREATE INDEX IF NOT EXISTS idx_equipment_slug ON public.equipment(user_id, slug);
+
 -- Exercise sets indexes
 CREATE INDEX IF NOT EXISTS idx_exercise_sets_workout_exercise_id ON public.exercise_sets(workout_exercise_id);
 CREATE INDEX IF NOT EXISTS idx_exercise_sets_user_id ON public.exercise_sets(user_id);
@@ -346,6 +390,7 @@ ALTER TABLE public.weight_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.plans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.workouts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.exercises ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.equipment ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.exercise_sets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.workout_schedules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.planned_workouts ENABLE ROW LEVEL SECURITY;
@@ -388,6 +433,11 @@ DROP POLICY IF EXISTS "Users can view own exercises" ON public.exercises;
 DROP POLICY IF EXISTS "Users can insert own exercises" ON public.exercises;
 DROP POLICY IF EXISTS "Users can update own exercises" ON public.exercises;
 DROP POLICY IF EXISTS "Users can delete own exercises" ON public.exercises;
+
+DROP POLICY IF EXISTS "Users can view own equipment" ON public.equipment;
+DROP POLICY IF EXISTS "Users can insert own equipment" ON public.equipment;
+DROP POLICY IF EXISTS "Users can update own equipment" ON public.equipment;
+DROP POLICY IF EXISTS "Users can delete own equipment" ON public.equipment;
 
 DROP POLICY IF EXISTS "Users can view own exercise sets" ON public.exercise_sets;
 DROP POLICY IF EXISTS "Users can insert own exercise sets" ON public.exercise_sets;
@@ -478,6 +528,16 @@ CREATE POLICY "Users can insert own exercises" ON public.exercises
 CREATE POLICY "Users can update own exercises" ON public.exercises
   FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own exercises" ON public.exercises
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Equipment policies
+CREATE POLICY "Users can view own equipment" ON public.equipment
+  FOR SELECT USING (auth.uid() = user_id OR created_by IS NULL);
+CREATE POLICY "Users can insert own equipment" ON public.equipment
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own equipment" ON public.equipment
+  FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own equipment" ON public.equipment
   FOR DELETE USING (auth.uid() = user_id);
 
 -- Exercise sets policies
@@ -589,13 +649,14 @@ CREATE TRIGGER update_workout_templates_updated_at
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profile (user_id, display_name, locale, units, theme)
+  INSERT INTO public.profile (user_id, display_name, locale, units, theme, timezone)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'display_name', NEW.email),
     COALESCE(NEW.raw_user_meta_data->>'locale', 'en'),
     COALESCE(NEW.raw_user_meta_data->>'units', 'imperial'),
-    COALESCE(NEW.raw_user_meta_data->>'theme', 'dark')
+    COALESCE(NEW.raw_user_meta_data->>'theme', 'dark'),
+    COALESCE(NEW.raw_user_meta_data->>'timezone', 'UTC')
   );
   RETURN NEW;
 END;
@@ -752,42 +813,262 @@ BEGIN
 END;
 $$;
 
+-- Function to get current date in user's timezone
+CREATE OR REPLACE FUNCTION public.get_user_current_date(
+  p_user_id UUID DEFAULT NULL
+)
+RETURNS DATE
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  user_timezone TEXT := 'UTC';
+BEGIN
+  -- Get user's timezone from profile, default to UTC if not found
+  IF p_user_id IS NOT NULL THEN
+    SELECT timezone INTO user_timezone 
+    FROM public.profile 
+    WHERE user_id = p_user_id;
+    
+    -- If no timezone found, default to UTC
+    user_timezone := COALESCE(user_timezone, 'UTC');
+  END IF;
+  
+  -- Return current date in the user's timezone
+  RETURN (NOW() AT TIME ZONE user_timezone)::DATE;
+END;
+$$;
+
+-- Function to get current date with explicit timezone (for manual use)
+CREATE OR REPLACE FUNCTION public.get_date_in_timezone(
+  p_timezone TEXT DEFAULT 'UTC'
+)
+RETURNS DATE
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  -- Return current date in the specified timezone
+  -- Common timezones: 'America/New_York', 'America/Los_Angeles', 'Europe/Madrid', etc.
+  RETURN (NOW() AT TIME ZONE p_timezone)::DATE;
+END;
+$$;
+
 -- Grant execute permissions on functions
 GRANT EXECUTE ON FUNCTION public.detect_suspicious_activity TO authenticated;
 GRANT EXECUTE ON FUNCTION public.log_security_event TO authenticated;
 GRANT EXECUTE ON FUNCTION public.create_audit_log TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_user_current_date TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_date_in_timezone TO authenticated;
 
 -- =====================================================
 -- CREATE YOUR PROFILE (Replace with your actual user_id)
 -- =====================================================
 
 -- Create your profile now:
-INSERT INTO public.profile (user_id, display_name, locale, units, theme)
-VALUES ('d36eb409-c2d6-439a-ae65-24c4231df387', 'Juan', 'en', 'imperial', 'system')
+INSERT INTO public.profile (user_id, display_name, locale, units, theme, timezone)
+VALUES ('d36eb409-c2d6-439a-ae65-24c4231df387', 'Juan', 'en', 'imperial', 'system', 'UTC')
 ON CONFLICT (user_id) DO UPDATE SET
   display_name = EXCLUDED.display_name,
   locale = EXCLUDED.locale,
   units = EXCLUDED.units,
   theme = EXCLUDED.theme,
+  timezone = EXCLUDED.timezone,
   updated_at = NOW();
 
--- Create basic exercise library for your user
+-- Create comprehensive exercise library for your user with all training categories
 INSERT INTO public.exercises (user_id, created_by, slug, name_en, name_es, category, muscle_groups, primary_muscles, secondary_muscles) VALUES
+-- Strength Training
 ('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'bench-press', 'Bench Press', 'Press de Banca', 'strength', ARRAY['chest', 'triceps', 'shoulders'], ARRAY['chest'], ARRAY['triceps', 'shoulders']),
 ('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'squat', 'Squat', 'Sentadilla', 'strength', ARRAY['quadriceps', 'glutes', 'hamstrings'], ARRAY['quadriceps'], ARRAY['glutes', 'hamstrings']),
 ('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'deadlift', 'Deadlift', 'Peso Muerto', 'strength', ARRAY['hamstrings', 'glutes', 'back'], ARRAY['hamstrings'], ARRAY['glutes', 'back']),
 ('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'overhead-press', 'Overhead Press', 'Press Militar', 'strength', ARRAY['shoulders', 'triceps', 'core'], ARRAY['shoulders'], ARRAY['triceps', 'core']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'barbell-rows', 'Barbell Rows', 'Remo con Barra', 'strength', ARRAY['lats', 'rhomboids', 'biceps'], ARRAY['lats'], ARRAY['rhomboids', 'biceps']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'lat-pulldown', 'Lat Pulldown', 'Jalón al Pecho', 'strength', ARRAY['lats', 'rhomboids', 'biceps'], ARRAY['lats'], ARRAY['rhomboids', 'biceps']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'leg-press', 'Leg Press', 'Prensa de Piernas', 'strength', ARRAY['quadriceps', 'glutes', 'hamstrings'], ARRAY['quadriceps'], ARRAY['glutes', 'hamstrings']),
+
+-- Cardio / Endurance
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'treadmill-running', 'Treadmill Running', 'Correr en Cinta', 'cardio', ARRAY['cardiovascular'], ARRAY['cardiovascular'], ARRAY[]::TEXT[]),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'stationary-bike', 'Stationary Bike', 'Bicicleta Estática', 'cardio', ARRAY['cardiovascular', 'quadriceps'], ARRAY['cardiovascular'], ARRAY['quadriceps']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'rowing-machine', 'Rowing Machine', 'Máquina de Remo', 'cardio', ARRAY['cardiovascular', 'back', 'legs'], ARRAY['cardiovascular'], ARRAY['back', 'legs']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'elliptical', 'Elliptical', 'Elíptica', 'cardio', ARRAY['cardiovascular'], ARRAY['cardiovascular'], ARRAY[]::TEXT[]),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'stair-climber', 'Stair Climber', 'Escaladora', 'cardio', ARRAY['cardiovascular', 'glutes', 'calves'], ARRAY['cardiovascular'], ARRAY['glutes', 'calves']),
+
+-- Hypertrophy / Bodybuilding
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'incline-dumbbell-press', 'Incline Dumbbell Press', 'Press Inclinado con Mancuernas', 'hypertrophy', ARRAY['chest', 'shoulders', 'triceps'], ARRAY['chest'], ARRAY['shoulders', 'triceps']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'cable-flyes', 'Cable Flyes', 'Aperturas con Polea', 'hypertrophy', ARRAY['chest'], ARRAY['chest'], ARRAY[]::TEXT[]),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'preacher-curls', 'Preacher Curls', 'Curl en Banco Scott', 'hypertrophy', ARRAY['biceps'], ARRAY['biceps'], ARRAY[]::TEXT[]),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'tricep-pushdowns', 'Tricep Pushdowns', 'Extensiones de Tríceps', 'hypertrophy', ARRAY['triceps'], ARRAY['triceps'], ARRAY[]::TEXT[]),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'leg-extensions', 'Leg Extensions', 'Extensiones de Cuádriceps', 'hypertrophy', ARRAY['quadriceps'], ARRAY['quadriceps'], ARRAY[]::TEXT[]),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'leg-curls', 'Leg Curls', 'Curl de Femoral', 'hypertrophy', ARRAY['hamstrings'], ARRAY['hamstrings'], ARRAY[]::TEXT[]),
+
+-- Powerlifting
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'competition-squat', 'Competition Squat', 'Sentadilla de Competición', 'powerlifting', ARRAY['quadriceps', 'glutes', 'hamstrings'], ARRAY['quadriceps'], ARRAY['glutes', 'hamstrings']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'competition-bench', 'Competition Bench Press', 'Press de Banca de Competición', 'powerlifting', ARRAY['chest', 'triceps', 'shoulders'], ARRAY['chest'], ARRAY['triceps', 'shoulders']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'competition-deadlift', 'Competition Deadlift', 'Peso Muerto de Competición', 'powerlifting', ARRAY['hamstrings', 'glutes', 'back'], ARRAY['hamstrings'], ARRAY['glutes', 'back']),
+
+-- Olympic Weightlifting
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'snatch', 'Snatch', 'Arrancada', 'olympic_lifting', ARRAY['full_body'], ARRAY['shoulders', 'legs'], ARRAY['back', 'core']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'clean-and-jerk', 'Clean and Jerk', 'Cargada y Envión', 'olympic_lifting', ARRAY['full_body'], ARRAY['shoulders', 'legs'], ARRAY['back', 'core']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'power-clean', 'Power Clean', 'Cargada de Potencia', 'olympic_lifting', ARRAY['full_body'], ARRAY['legs', 'back'], ARRAY['shoulders', 'core']),
+
+-- Cross-Training / Functional Training
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'kettlebell-swings', 'Kettlebell Swings', 'Balanceos con Kettlebell', 'functional', ARRAY['glutes', 'hamstrings', 'core'], ARRAY['glutes'], ARRAY['hamstrings', 'core']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'burpees', 'Burpees', 'Burpees', 'functional', ARRAY['full_body'], ARRAY['chest', 'legs'], ARRAY['shoulders', 'core']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'trx-rows', 'TRX Rows', 'Remo con TRX', 'functional', ARRAY['back', 'biceps', 'core'], ARRAY['back'], ARRAY['biceps', 'core']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'battle-ropes', 'Battle Ropes', 'Cuerdas de Entrenamiento', 'functional', ARRAY['shoulders', 'core', 'cardiovascular'], ARRAY['shoulders'], ARRAY['core', 'cardiovascular']),
+
+-- HIIT
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'mountain-climbers', 'Mountain Climbers', 'Escaladores', 'hiit', ARRAY['core', 'shoulders', 'cardiovascular'], ARRAY['core'], ARRAY['shoulders', 'cardiovascular']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'jump-squats', 'Jump Squats', 'Sentadillas con Salto', 'hiit', ARRAY['quadriceps', 'glutes', 'calves'], ARRAY['quadriceps'], ARRAY['glutes', 'calves']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'high-knees', 'High Knees', 'Rodillas al Pecho', 'hiit', ARRAY['hip_flexors', 'cardiovascular'], ARRAY['hip_flexors'], ARRAY['cardiovascular']),
+
+-- Core Training
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'plank', 'Plank', 'Plancha', 'core', ARRAY['core', 'shoulders'], ARRAY['core'], ARRAY['shoulders']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'russian-twists', 'Russian Twists', 'Giros Rusos', 'core', ARRAY['core', 'obliques'], ARRAY['core'], ARRAY['obliques']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'dead-bugs', 'Dead Bugs', 'Bicho Muerto', 'core', ARRAY['core', 'hip_flexors'], ARRAY['core'], ARRAY['hip_flexors']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'bird-dogs', 'Bird Dogs', 'Perro Pájaro', 'core', ARRAY['core', 'glutes', 'back'], ARRAY['core'], ARRAY['glutes', 'back']),
+
+-- Balance & Coordination
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'bosu-squats', 'BOSU Squats', 'Sentadillas en BOSU', 'balance', ARRAY['quadriceps', 'glutes', 'core'], ARRAY['quadriceps'], ARRAY['glutes', 'core']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'single-leg-stance', 'Single Leg Stance', 'Apoyo Unipodal', 'balance', ARRAY['glutes', 'core', 'ankles'], ARRAY['glutes'], ARRAY['core', 'ankles']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'stability-ball-plank', 'Stability Ball Plank', 'Plancha en Pelota Suiza', 'balance', ARRAY['core', 'shoulders'], ARRAY['core'], ARRAY['shoulders']),
+
+-- Mobility / Flexibility
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'hip-flexor-stretch', 'Hip Flexor Stretch', 'Estiramiento de Flexores', 'mobility', ARRAY['hip_flexors'], ARRAY['hip_flexors'], ARRAY[]::TEXT[]),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'thoracic-spine-rotation', 'Thoracic Spine Rotation', 'Rotación Torácica', 'mobility', ARRAY['thoracic_spine'], ARRAY['thoracic_spine'], ARRAY[]::TEXT[]),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'foam-rolling', 'Foam Rolling', 'Rodillo de Espuma', 'mobility', ARRAY['full_body'], ARRAY['full_body'], ARRAY[]::TEXT[]),
+
+-- Rehabilitation / Prehab
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'glute-bridges', 'Glute Bridges', 'Puentes de Glúteo', 'rehabilitation', ARRAY['glutes', 'hamstrings'], ARRAY['glutes'], ARRAY['hamstrings']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'clamshells', 'Clamshells', 'Almejas', 'rehabilitation', ARRAY['glutes', 'hip_abductors'], ARRAY['glutes'], ARRAY['hip_abductors']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'wall-slides', 'Wall Slides', 'Deslizamientos en Pared', 'rehabilitation', ARRAY['shoulders', 'upper_back'], ARRAY['shoulders'], ARRAY['upper_back']),
+
+-- Sports Performance
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'agility-ladder', 'Agility Ladder', 'Escalera de Agilidad', 'sports_performance', ARRAY['legs', 'coordination'], ARRAY['legs'], ARRAY['coordination']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'box-jumps', 'Box Jumps', 'Saltos al Cajón', 'sports_performance', ARRAY['quadriceps', 'glutes', 'calves'], ARRAY['quadriceps'], ARRAY['glutes', 'calves']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'cone-drills', 'Cone Drills', 'Ejercicios con Conos', 'sports_performance', ARRAY['legs', 'agility'], ARRAY['legs'], ARRAY['agility']),
+
+-- Mind-Body
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'child-pose', 'Child Pose', 'Postura del Niño', 'mind_body', ARRAY['back', 'hips'], ARRAY['back'], ARRAY['hips']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'downward-dog', 'Downward Dog', 'Perro Boca Abajo', 'mind_body', ARRAY['shoulders', 'hamstrings', 'calves'], ARRAY['shoulders'], ARRAY['hamstrings', 'calves']),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'breathing-exercises', 'Breathing Exercises', 'Ejercicios de Respiración', 'mind_body', ARRAY['diaphragm'], ARRAY['diaphragm'], ARRAY[]::TEXT[]),
+
+-- Traditional favorites
 ('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'pull-ups', 'Pull-ups', 'Dominadas', 'strength', ARRAY['lats', 'biceps', 'rhomboids'], ARRAY['lats'], ARRAY['biceps', 'rhomboids']),
-('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'rows', 'Barbell Rows', 'Remo con Barra', 'strength', ARRAY['lats', 'rhomboids', 'biceps'], ARRAY['lats'], ARRAY['rhomboids', 'biceps']),
 ('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'dips', 'Dips', 'Fondos', 'strength', ARRAY['triceps', 'chest', 'shoulders'], ARRAY['triceps'], ARRAY['chest', 'shoulders']),
 ('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'lunges', 'Lunges', 'Zancadas', 'strength', ARRAY['quadriceps', 'glutes', 'hamstrings'], ARRAY['quadriceps'], ARRAY['glutes', 'hamstrings'])
 ON CONFLICT (user_id, slug) DO NOTHING;
 
--- Insert system exercises (available to all users)
+-- Insert comprehensive system exercises (available to all users) organized by training categories
 INSERT INTO public.exercises (user_id, created_by, slug, name_en, name_es, category, muscle_groups, primary_muscles, secondary_muscles) VALUES
+-- System Strength Training Exercises
 (NULL, NULL, 'system-bench-press', 'Bench Press', 'Press de Banca', 'strength', ARRAY['chest', 'triceps', 'shoulders'], ARRAY['chest'], ARRAY['triceps', 'shoulders']),
 (NULL, NULL, 'system-squat', 'Squat', 'Sentadilla', 'strength', ARRAY['quadriceps', 'glutes', 'hamstrings'], ARRAY['quadriceps'], ARRAY['glutes', 'hamstrings']),
 (NULL, NULL, 'system-deadlift', 'Deadlift', 'Peso Muerto', 'strength', ARRAY['hamstrings', 'glutes', 'back'], ARRAY['hamstrings'], ARRAY['glutes', 'back']),
 (NULL, NULL, 'system-overhead-press', 'Overhead Press', 'Press Militar', 'strength', ARRAY['shoulders', 'triceps', 'core'], ARRAY['shoulders'], ARRAY['triceps', 'core']),
-(NULL, NULL, 'system-pull-ups', 'Pull-ups', 'Dominadas', 'strength', ARRAY['lats', 'biceps', 'rhomboids'], ARRAY['lats'], ARRAY['biceps', 'rhomboids'])
+(NULL, NULL, 'system-pull-ups', 'Pull-ups', 'Dominadas', 'strength', ARRAY['lats', 'biceps', 'rhomboids'], ARRAY['lats'], ARRAY['biceps', 'rhomboids']),
+
+-- System Cardio Exercises
+(NULL, NULL, 'system-treadmill', 'Treadmill', 'Cinta de Correr', 'cardio', ARRAY['cardiovascular'], ARRAY['cardiovascular'], ARRAY[]::TEXT[]),
+(NULL, NULL, 'system-bike', 'Exercise Bike', 'Bicicleta de Ejercicio', 'cardio', ARRAY['cardiovascular', 'quadriceps'], ARRAY['cardiovascular'], ARRAY['quadriceps']),
+(NULL, NULL, 'system-rowing', 'Rowing Machine', 'Máquina de Remo', 'cardio', ARRAY['cardiovascular', 'back', 'legs'], ARRAY['cardiovascular'], ARRAY['back', 'legs']),
+
+-- System HIIT Exercises
+(NULL, NULL, 'system-burpees', 'Burpees', 'Burpees', 'hiit', ARRAY['full_body'], ARRAY['chest', 'legs'], ARRAY['shoulders', 'core']),
+(NULL, NULL, 'system-jump-squats', 'Jump Squats', 'Sentadillas con Salto', 'hiit', ARRAY['quadriceps', 'glutes', 'calves'], ARRAY['quadriceps'], ARRAY['glutes', 'calves']),
+
+-- System Core Training
+(NULL, NULL, 'system-plank', 'Plank', 'Plancha', 'core', ARRAY['core', 'shoulders'], ARRAY['core'], ARRAY['shoulders']),
+(NULL, NULL, 'system-crunches', 'Crunches', 'Abdominales', 'core', ARRAY['core'], ARRAY['core'], ARRAY[]::TEXT[]),
+
+-- System Functional Training
+(NULL, NULL, 'system-kettlebell-swings', 'Kettlebell Swings', 'Balanceos con Kettlebell', 'functional', ARRAY['glutes', 'hamstrings', 'core'], ARRAY['glutes'], ARRAY['hamstrings', 'core']),
+
+-- System Mobility Exercises
+(NULL, NULL, 'system-stretching', 'Stretching', 'Estiramientos', 'mobility', ARRAY['full_body'], ARRAY['full_body'], ARRAY[]::TEXT[]),
+
+-- System Group Class Exercises
+(NULL, NULL, 'system-spinning', 'Spinning', 'Spinning', 'group_classes', ARRAY['cardiovascular', 'quadriceps'], ARRAY['cardiovascular'], ARRAY['quadriceps']),
+(NULL, NULL, 'system-bootcamp', 'Bootcamp', 'Bootcamp', 'group_classes', ARRAY['full_body'], ARRAY['full_body'], ARRAY[]::TEXT[])
+ON CONFLICT DO NOTHING;
+
+-- =====================================================
+-- EQUIPMENT LIBRARY
+-- =====================================================
+
+-- Insert comprehensive gym equipment for your user
+INSERT INTO public.equipment (user_id, created_by, slug, name_en, name_es, category, subcategory, description) VALUES
+-- Cardio Equipment
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'treadmill', 'Treadmill', 'Cinta de Correr', 'cardio', 'running', 'Motorized treadmill for walking and running'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'elliptical-machine', 'Elliptical', 'Elíptica', 'cardio', 'low_impact', 'Low-impact cardio machine with arm and leg movement'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'stationary-bike', 'Stationary Bike', 'Bicicleta Estática', 'cardio', 'cycling', 'Upright or recumbent stationary exercise bike'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'stair-climber', 'Stair Climber/Stepper', 'Escaladora', 'cardio', 'stepping', 'Machine that simulates stair climbing motion'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'rowing-machine', 'Rowing Machine', 'Máquina de Remo', 'cardio', 'rowing', 'Full-body cardio machine simulating rowing motion'),
+
+-- Free Weights / Strength Equipment
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'dumbbells', 'Dumbbells (Range)', 'Mancuernas (Rango)', 'free_weights', 'dumbbells', 'Complete set of dumbbells from light to heavy weights'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'barbells-plates', 'Barbells + Plates', 'Barras + Discos', 'free_weights', 'barbells', 'Olympic barbells with weight plates'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'flat-bench', 'Flat Bench', 'Banco Plano', 'free_weights', 'benches', 'Flat weight bench for pressing exercises'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'incline-bench', 'Incline Bench', 'Banco Inclinado', 'free_weights', 'benches', 'Adjustable incline bench for various angles'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'decline-bench', 'Decline Bench', 'Banco Declinado', 'free_weights', 'benches', 'Decline bench for decline pressing movements'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'squat-rack', 'Squat Rack/Power Rack', 'Rack de Sentadillas', 'free_weights', 'racks', 'Safety rack for squats and other barbell exercises'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'smith-machine', 'Smith Machine', 'Máquina Smith', 'free_weights', 'machines', 'Guided barbell machine with safety features'),
+
+-- Plate-loaded and Selectorized Machines
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'plate-loaded-machines', 'Plate-loaded Machines', 'Máquinas con Discos', 'machines', 'plate_loaded', 'Machines that use weight plates for resistance'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'selectorized-machines', 'Selectorized Machines', 'Máquinas Selectorizadas', 'machines', 'selectorized', 'Pin-selected weight stack machines'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'chest-press-machine', 'Chest Press', 'Prensa de Pecho', 'machines', 'chest', 'Machine for chest pressing movements'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'leg-press-machine', 'Leg Press', 'Prensa de Piernas', 'machines', 'legs', 'Machine for leg pressing exercises'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'lat-pulldown-machine', 'Lat Pulldown', 'Jalón al Pecho', 'machines', 'back', 'Cable machine for lat pulldown exercises'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'leg-extension-machine', 'Leg Extension', 'Extensión de Cuádriceps', 'machines', 'legs', 'Machine for quadriceps extension'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'seated-leg-curl', 'Seated Leg Curl', 'Curl de Femoral Sentado', 'machines', 'legs', 'Machine for hamstring curls in seated position'),
+
+-- Cable Machines
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'cable-crossover', 'Cable Crossover', 'Cruce de Poleas', 'machines', 'cables', 'Dual cable machine for crossover movements'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'cable-pulldown', 'Cable Pulldown', 'Jalón con Polea', 'machines', 'cables', 'High cable pulldown station'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'cable-pushdown', 'Cable Pushdown', 'Extensión con Polea', 'machines', 'cables', 'Cable station for tricep pushdowns'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'shoulder-press-machine', 'Shoulder Press', 'Prensa de Hombros', 'machines', 'shoulders', 'Machine for overhead pressing movements'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'pec-deck', 'Pec Deck', 'Máquina de Pectorales', 'machines', 'chest', 'Machine for chest fly movements'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'back-extension-machine', 'Back Extension/Hyperextension', 'Extensión de Espalda', 'machines', 'back', 'Machine for lower back extension exercises'),
+
+-- Functional / Accessory Equipment
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'kettlebells', 'Kettlebells', 'Kettlebells', 'functional', 'kettlebells', 'Cast iron weights with handles for dynamic movements'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'resistance-bands', 'Resistance Bands', 'Bandas de Resistencia', 'functional', 'bands', 'Elastic bands for resistance training'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'medicine-balls', 'Medicine Balls', 'Pelotas Medicinales', 'functional', 'balls', 'Weighted balls for functional training'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'battle-ropes', 'Battle Ropes', 'Cuerdas de Entrenamiento', 'functional', 'ropes', 'Heavy ropes for high-intensity cardio and strength'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'bosu-ball', 'BOSU Ball', 'Pelota BOSU', 'functional', 'balance', 'Half-sphere balance trainer'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'stability-ball', 'Stability Ball', 'Pelota Suiza', 'functional', 'balance', 'Large inflatable ball for core and stability training'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'trx-suspension', 'TRX Suspension', 'TRX Suspensión', 'functional', 'suspension', 'Suspension trainer using body weight'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'punching-bag', 'Punching/Boxing Bags', 'Sacos de Boxeo', 'functional', 'boxing', 'Heavy bags for boxing and martial arts training'),
+
+-- Amenities
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'pool-spa', 'Pool & Spa', 'Piscina y Spa', 'amenities', 'water', 'Swimming pool and spa facilities'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'locker-rooms', 'Locker Rooms & Showers', 'Vestuarios y Duchas', 'amenities', 'facilities', 'Changing rooms with lockers and showers'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'sauna-steam', 'Sauna/Steam Rooms', 'Sauna/Vapor', 'amenities', 'wellness', 'Dry sauna and steam room facilities'),
+('d36eb409-c2d6-439a-ae65-24c4231df387', 'd36eb409-c2d6-439a-ae65-24c4231df387', 'juice-bar', 'Juice Bar/Refreshment Area', 'Barra de Jugos', 'amenities', 'nutrition', 'Area for healthy drinks and snacks')
+ON CONFLICT (user_id, slug) DO NOTHING;
+
+-- Insert system equipment (available to all users)
+INSERT INTO public.equipment (user_id, created_by, slug, name_en, name_es, category, subcategory, description) VALUES
+-- System Cardio Equipment
+(NULL, NULL, 'system-treadmill', 'Treadmill', 'Cinta de Correr', 'cardio', 'running', 'Standard gym treadmill'),
+(NULL, NULL, 'system-elliptical', 'Elliptical', 'Elíptica', 'cardio', 'low_impact', 'Standard elliptical machine'),
+(NULL, NULL, 'system-bike', 'Stationary Bike', 'Bicicleta Estática', 'cardio', 'cycling', 'Standard exercise bike'),
+(NULL, NULL, 'system-rowing', 'Rowing Machine', 'Máquina de Remo', 'cardio', 'rowing', 'Standard rowing machine'),
+
+-- System Strength Equipment
+(NULL, NULL, 'system-dumbbells', 'Dumbbells', 'Mancuernas', 'free_weights', 'dumbbells', 'Standard dumbbell set'),
+(NULL, NULL, 'system-barbells', 'Barbells', 'Barras', 'free_weights', 'barbells', 'Standard barbell set'),
+(NULL, NULL, 'system-bench', 'Weight Bench', 'Banco de Pesas', 'free_weights', 'benches', 'Standard flat bench'),
+(NULL, NULL, 'system-squat-rack', 'Squat Rack', 'Rack de Sentadillas', 'free_weights', 'racks', 'Standard squat rack'),
+
+-- System Machines
+(NULL, NULL, 'system-chest-press', 'Chest Press Machine', 'Máquina Prensa de Pecho', 'machines', 'chest', 'Standard chest press machine'),
+(NULL, NULL, 'system-leg-press', 'Leg Press Machine', 'Máquina Prensa de Piernas', 'machines', 'legs', 'Standard leg press machine'),
+(NULL, NULL, 'system-lat-pulldown', 'Lat Pulldown Machine', 'Máquina Jalón', 'machines', 'back', 'Standard lat pulldown machine'),
+
+-- System Functional Equipment
+(NULL, NULL, 'system-kettlebells', 'Kettlebells', 'Kettlebells', 'functional', 'kettlebells', 'Standard kettlebell set'),
+(NULL, NULL, 'system-medicine-balls', 'Medicine Balls', 'Pelotas Medicinales', 'functional', 'balls', 'Standard medicine ball set')
 ON CONFLICT DO NOTHING;

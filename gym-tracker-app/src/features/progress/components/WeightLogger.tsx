@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card } from '../../../components/ui/Card/Card';
 import { Button } from '../../../components/ui/Button/Button';
 import { Input } from '../../../components/ui/Input/Input';
-import { useAuth } from '../../auth/AuthContext';
+import { useAuth } from '../../auth';
 import { progressService } from '../../../lib/progress-service';
 import styles from './WeightLogger.module.css';
 
@@ -12,7 +12,11 @@ export const WeightLogger: React.FC = () => {
   const queryClient = useQueryClient();
   const [weight, setWeight] = useState('');
   const [notes, setNotes] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const getCurrentDateString = (): string => {
+    const dateStr = new Date().toISOString().split('T')[0];
+    return dateStr!; // Assert it's not undefined
+  };
+  const [date, setDate] = useState<string>(getCurrentDateString());
 
   const logWeightMutation = useMutation({
     mutationFn: () => progressService.logWeight(
@@ -26,7 +30,7 @@ export const WeightLogger: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['progressData'] });
       setWeight('');
       setNotes('');
-      setDate(new Date().toISOString().split('T')[0]);
+      setDate(getCurrentDateString());
     },
   });
 
@@ -38,12 +42,12 @@ export const WeightLogger: React.FC = () => {
   };
 
   return (
-    <Card className={styles.loggerCard}>
+    <Card className={styles['loggerCard']}>
       <h3>Log Your Weight</h3>
       
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.formRow}>
-          <div className={styles.formGroup}>
+      <form onSubmit={handleSubmit} className={styles['form']}>
+        <div className={styles['formRow']}>
+          <div className={styles['formGroup']}>
             <label htmlFor="weight">Weight (kg)</label>
             <Input
               id="weight"
@@ -56,7 +60,7 @@ export const WeightLogger: React.FC = () => {
             />
           </div>
           
-          <div className={styles.formGroup}>
+          <div className={styles['formGroup']}>
             <label htmlFor="date">Date</label>
             <Input
               id="date"
@@ -68,7 +72,7 @@ export const WeightLogger: React.FC = () => {
           </div>
         </div>
         
-        <div className={styles.formGroup}>
+        <div className={styles['formGroup']}>
           <label htmlFor="notes">Notes (optional)</label>
           <Input
             id="notes"
@@ -83,7 +87,7 @@ export const WeightLogger: React.FC = () => {
           type="submit"
           variant="primary"
           disabled={!weight || !date || logWeightMutation.isPending}
-          className={styles.submitButton}
+          className={styles['submitButton']}
         >
           {logWeightMutation.isPending ? 'Logging...' : 'Log Weight'}
         </Button>

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '../../auth/AuthContext';
+import { useAuth } from '../../auth';
 import { useAppStore } from '../../../store/appStore';
 import { SettingsService } from '../services/settingsService';
+import type { UserProfile } from '../../../types/common';
 import type { 
   ProfileFormData, 
   PreferencesFormData, 
@@ -18,6 +19,7 @@ export function useSettings() {
   
   const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdatedProfile, setLastUpdatedProfile] = useState<UserProfile | null>(null);
 
   // Profile update mutation
   const updateProfileMutation = useMutation({
@@ -26,6 +28,8 @@ export function useSettings() {
       return SettingsService.updateProfile(user.id, data);
     },
     onSuccess: (updatedProfile) => {
+      // Store the updated profile for immediate use
+      setLastUpdatedProfile(updatedProfile);
       // Update auth context with new profile data
       queryClient.invalidateQueries({ queryKey: ['user', 'profile'] });
       setError(null);
@@ -127,5 +131,8 @@ export function useSettings() {
     preferencesUpdateSuccess: updatePreferencesMutation.isSuccess,
     passwordUpdateSuccess: updatePasswordMutation.isSuccess,
     exportSuccess: exportDataMutation.isSuccess,
+    
+    // Updated data
+    lastUpdatedProfile,
   };
 }

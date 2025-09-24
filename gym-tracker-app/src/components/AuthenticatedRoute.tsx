@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../features/auth/AuthContext';
+import { useAuth } from '../features/auth';
 import { LoadingSpinner } from './ui/LoadingSpinner/LoadingSpinner';
 
 interface AuthenticatedRouteProps {

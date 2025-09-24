@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { AuthService } from '../../lib/auth';
 import { useAuthStore } from '../../store/authStore';
+import { AuthContext } from './context';
 import type {
   AuthContextType,
   SignInFormData,
@@ -9,8 +10,6 @@ import type {
   ResetPasswordFormData,
   UpdatePasswordFormData,
 } from '../../types/auth';
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -81,7 +80,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
               console.log('Setting user with profile...');
               setUser({
                 ...session.user,
-                profile,
+                profile: profile || AuthService.createDefaultProfile(session.user.id),
               });
               console.log('User set after sign in, isAuthenticated should now be true');
             } catch (error) {
@@ -103,10 +102,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
               const profile = await AuthService.fetchUserProfile(session.user.id);
               setUser({
                 ...session.user,
-                profile,
+                profile: profile || AuthService.createDefaultProfile(session.user.id),
               });
             } catch (error) {
               console.error('Profile fetch failed on token refresh:', error);
+              setUser({
+                ...session.user,
+                profile: AuthService.createDefaultProfile(session.user.id),
+              });
+            }
+          } else if (event === 'USER_UPDATED' && session?.user) {
+            console.log('User updated, refreshing profile...');
+            try {
+              const profile = await AuthService.fetchUserProfile(session.user.id);
+              setUser({
+                ...session.user,
+                profile: profile || AuthService.createDefaultProfile(session.user.id),
+              });
+              console.log('Profile updated successfully');
+            } catch (error) {
+              console.error('Profile fetch failed on user update:', error);
               setUser({
                 ...session.user,
                 profile: AuthService.createDefaultProfile(session.user.id),
@@ -205,13 +220,4 @@ export function AuthProvider({ children }: AuthProviderProps) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-// Custom hook to use auth context
-export function useAuth(): AuthContextType {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }

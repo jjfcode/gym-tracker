@@ -1,9 +1,10 @@
-import type { UserProfile } from '../../types/common';
+import type { UserProfile, Workout, Exercise, WeightLog, Plan } from '../../types/common';
 
 // Settings form data types
 export interface ProfileFormData {
   display_name: string;
   email: string;
+  timezone: string;
 }
 
 export interface PreferencesFormData {
@@ -24,10 +25,10 @@ export type SettingsSection = 'profile' | 'preferences' | 'security' | 'data';
 // Data export types
 export interface ExportData {
   profile: UserProfile;
-  workouts: any[];
-  exercises: any[];
-  weightLogs: any[];
-  plans: any[];
+  workouts: Workout[];
+  exercises: Exercise[];
+  weightLogs: WeightLog[];
+  plans: Plan[];
   exportedAt: string;
 }
 

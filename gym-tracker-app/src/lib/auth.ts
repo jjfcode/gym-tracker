@@ -331,6 +331,7 @@ export class AuthService {
         locale: (data.locale as 'en' | 'es') || 'en',
         units: (data.units as 'metric' | 'imperial') || 'imperial',
         theme: (data.theme as 'dark' | 'light' | 'system') || 'system',
+        timezone: (data as { timezone?: string }).timezone || 'UTC',
         created_at: data.created_at,
         updated_at: data.updated_at,
       };
@@ -353,6 +354,7 @@ export class AuthService {
       locale: 'en',
       units: 'imperial', // Default to imperial
       theme: 'system',
+      timezone: 'UTC',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -372,6 +374,7 @@ export class AuthService {
           locale: profileData.locale || 'en',
           units: profileData.units || 'imperial',
           theme: profileData.theme || 'system',
+          timezone: profileData.timezone || 'UTC',
         })
         .select()
         .single();
@@ -394,6 +397,7 @@ export class AuthService {
         locale: (data.locale as 'en' | 'es') || 'en',
         units: (data.units as 'metric' | 'imperial') || 'imperial',
         theme: (data.theme as 'dark' | 'light' | 'system') || 'system',
+        timezone: (data as { timezone?: string }).timezone || 'UTC',
         created_at: data.created_at,
         updated_at: data.updated_at,
       };
@@ -441,6 +445,7 @@ export class AuthService {
         locale: (data.locale as 'en' | 'es') || 'en',
         units: (data.units as 'metric' | 'imperial') || 'imperial',
         theme: (data.theme as 'dark' | 'light' | 'system') || 'system',
+        timezone: (data as { timezone?: string }).timezone || 'UTC',
         created_at: data.created_at,
         updated_at: data.updated_at,
       };

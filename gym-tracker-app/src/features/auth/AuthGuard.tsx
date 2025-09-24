@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from './AuthContext';
+import { useAuth } from './useAuth';
 import styles from './AuthGuard.module.css';
 
 interface AuthGuardProps {
@@ -20,9 +20,9 @@ export function AuthGuard({
   // Show loading state while checking authentication
   if (isLoading) {
     return (
-      <div className={styles.authGuardLoading}>
-        <div className={styles.loadingSpinner}>
-          <div className={styles.spinner}></div>
+      <div className={styles['authGuardLoading']}>
+        <div className={styles['loadingSpinner']}>
+          <div className={styles['spinner']}></div>
           <p>Loading...</p>
         </div>
       </div>

@@ -3,7 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { BottomNavigation } from '../BottomNavigation';
 import { ThemeToggle } from '../../ui/ThemeToggle';
 import { Button } from '../../ui/Button/Button';
-import { useAuth } from '../../../features/auth/AuthContext';
+import { useAuth } from '../../../features/auth';
 import styles from './AppLayout.module.css';
 
 const AppLayout: React.FC = () => {
@@ -41,40 +41,40 @@ const AppLayout: React.FC = () => {
   };
 
   return (
-    <div className={styles.layout}>
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <div className={styles.headerLeft}>
-            <h1 className={styles.title}>{getPageTitle()}</h1>
+    <div className={styles['layout']}>
+      <header className={styles['header']}>
+        <div className={styles['headerContent']}>
+          <div className={styles['headerLeft']}>
+            <h1 className={styles['title']}>{getPageTitle()}</h1>
           </div>
-          <div className={styles.headerActions}>
+          <div className={styles['headerActions']}>
             <ThemeToggle />
             
             {/* User Menu */}
-            <div className={styles.userMenu}>
+            <div className={styles['userMenu']}>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className={styles.userButton}
+                className={styles['userButton']}
               >
-                {user?.profile?.full_name || user?.email || 'User'}
+                {user?.profile?.display_name || user?.email || 'User'}
               </Button>
               
               {showUserMenu && (
-                <div className={styles.userDropdown}>
-                  <div className={styles.userInfo}>
-                    <p className={styles.userName}>
-                      {user?.profile?.full_name || 'User'}
+                <div className={styles['userDropdown']}>
+                  <div className={styles['userInfo']}>
+                    <p className={styles['userName']}>
+                      {user?.profile?.display_name || 'User'}
                     </p>
-                    <p className={styles.userEmail}>{user?.email}</p>
+                    <p className={styles['userEmail']}>{user?.email}</p>
                   </div>
-                  <hr className={styles.divider} />
+                  <hr className={styles['divider']} />
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleSignOut}
-                    className={styles.signOutButton}
+                    className={styles['signOutButton']}
                   >
                     Sign Out
                   </Button>
@@ -85,20 +85,20 @@ const AppLayout: React.FC = () => {
         </div>
       </header>
       
-      <main className={styles.main}>
-        <div className={styles.content}>
+      <main className={styles['main']}>
+        <div className={styles['content']}>
           <Outlet />
         </div>
       </main>
       
-      <footer className={styles.footer}>
+      <footer className={styles['footer']}>
         <BottomNavigation />
       </footer>
 
       {/* Overlay to close user menu */}
       {showUserMenu && (
         <div 
-          className={styles.overlay}
+          className={styles['overlay']}
           onClick={() => setShowUserMenu(false)}
         />
       )}

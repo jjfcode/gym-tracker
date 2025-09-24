@@ -4,9 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, Button, Input, Textarea, Select } from '../../../../components/ui';
 import { customExerciseSchema, type CustomExerciseFormData } from '../../../../lib/validations/exercise';
 import { ExerciseService } from '../../services/exerciseService';
-import { useAuth } from '../../../auth/AuthContext';
+import { useAuth } from '../../../auth';
 import type { CustomExercise } from '../../types';
-import type { MuscleGroup, Equipment } from '../../../../types/workout';
 import styles from './CustomExerciseForm.module.css';
 
 interface CustomExerciseFormProps {
@@ -36,22 +35,22 @@ const CustomExerciseForm: React.FC<CustomExerciseFormProps> = ({
     resolver: zodResolver(customExerciseSchema),
     defaultValues: exercise ? {
       slug: exercise.slug,
-      name_en: exercise.name_en,
-      name_es: exercise.name_es,
-      muscle_groups: exercise.muscle_groups,
-      equipment: exercise.equipment,
-      instructions_en: exercise.instructions_en,
-      instructions_es: exercise.instructions_es,
-      difficulty_level: exercise.difficulty_level,
-      is_compound: exercise.is_compound,
-      variations: exercise.variations || [],
-      media_url: exercise.media_url || '',
+      name_en: exercise['name_en'],
+      name_es: exercise['name_es'],
+      muscle_groups: exercise['muscle_groups'],
+      equipment: exercise['equipment'],
+      instructions_en: exercise['instructions_en'],
+      instructions_es: exercise['instructions_es'],
+      difficulty_level: exercise['difficulty_level'],
+      is_compound: exercise['is_compound'],
+      variations: exercise['variations'] || [],
+      media_url: exercise['media_url'] || '',
     } : {
       slug: '',
       name_en: '',
       name_es: '',
       muscle_groups: [],
-      equipment: 'bodyweight' as Equipment,
+      equipment: 'bodyweight',
       instructions_en: '',
       instructions_es: '',
       difficulty_level: 'beginner' as const,
@@ -133,16 +132,16 @@ const CustomExerciseForm: React.FC<CustomExerciseFormProps> = ({
   };
 
   return (
-    <Card className={styles.formCard}>
-      <div className={styles.header}>
-        <h2 className={styles.title}>
+    <Card className={styles['formCard']}>
+      <div className={styles['header']}>
+        <h2 className={styles['title']}>
           {isEditing ? 'Edit Custom Exercise' : 'Create Custom Exercise'}
         </h2>
       </div>
 
-      <form onSubmit={handleSubmit(handleFormSubmit)} className={styles.form}>
-        <div className={styles.formGrid}>
-          <div className={styles.nameSection}>
+      <form onSubmit={handleSubmit(handleFormSubmit)} className={styles['form']}>
+        <div className={styles['formGrid']}>
+          <div className={styles['nameSection']}>
             <Controller
               name="name_en"
               control={control}
@@ -151,7 +150,7 @@ const CustomExerciseForm: React.FC<CustomExerciseFormProps> = ({
                   {...field}
                   label="Exercise Name (English)"
                   placeholder="e.g., Push-ups"
-                  error={errors.name_en?.message}
+                  {...(errors.name_en?.message && { error: errors.name_en.message })}
                   required
                 />
               )}
@@ -165,7 +164,7 @@ const CustomExerciseForm: React.FC<CustomExerciseFormProps> = ({
                   {...field}
                   label="Exercise Name (Spanish)"
                   placeholder="e.g., Flexiones"
-                  error={errors.name_es?.message}
+                  {...(errors.name_es?.message && { error: errors.name_es.message })}
                   required
                 />
               )}
@@ -192,9 +191,9 @@ const CustomExerciseForm: React.FC<CustomExerciseFormProps> = ({
             name="muscle_groups"
             control={control}
             render={({ field }) => (
-              <div className={styles.selectField}>
-                <label className={styles.label}>
-                  Muscle Groups <span className={styles.required}>*</span>
+              <div className={styles['selectField']}>
+                <label className={styles['label']}>
+                  Muscle Groups <span className={styles['required']}>*</span>
                 </label>
                 <Select
                   options={muscleGroupOptions}
@@ -205,7 +204,7 @@ const CustomExerciseForm: React.FC<CustomExerciseFormProps> = ({
                   searchable
                 />
                 {errors.muscle_groups && (
-                  <div className={styles.error}>{errors.muscle_groups.message}</div>
+                  <div className={styles['error']}>{errors.muscle_groups.message}</div>
                 )}
               </div>
             )}
@@ -215,9 +214,9 @@ const CustomExerciseForm: React.FC<CustomExerciseFormProps> = ({
             name="equipment"
             control={control}
             render={({ field }) => (
-              <div className={styles.selectField}>
-                <label className={styles.label}>
-                  Equipment <span className={styles.required}>*</span>
+              <div className={styles['selectField']}>
+                <label className={styles['label']}>
+                  Equipment <span className={styles['required']}>*</span>
                 </label>
                 <Select
                   options={equipmentOptions}
@@ -226,7 +225,7 @@ const CustomExerciseForm: React.FC<CustomExerciseFormProps> = ({
                   placeholder="Select equipment"
                 />
                 {errors.equipment && (
-                  <div className={styles.error}>{errors.equipment.message}</div>
+                  <div className={styles['error']}>{errors.equipment.message}</div>
                 )}
               </div>
             )}
@@ -236,9 +235,9 @@ const CustomExerciseForm: React.FC<CustomExerciseFormProps> = ({
             name="difficulty_level"
             control={control}
             render={({ field }) => (
-              <div className={styles.selectField}>
-                <label className={styles.label}>
-                  Difficulty Level <span className={styles.required}>*</span>
+              <div className={styles['selectField']}>
+                <label className={styles['label']}>
+                  Difficulty Level <span className={styles['required']}>*</span>
                 </label>
                 <Select
                   options={difficultyOptions}
@@ -247,26 +246,26 @@ const CustomExerciseForm: React.FC<CustomExerciseFormProps> = ({
                   placeholder="Select difficulty"
                 />
                 {errors.difficulty_level && (
-                  <div className={styles.error}>{errors.difficulty_level.message}</div>
+                  <div className={styles['error']}>{errors.difficulty_level.message}</div>
                 )}
               </div>
             )}
           />
 
-          <div className={styles.checkboxField}>
+          <div className={styles['checkboxField']}>
             <Controller
               name="is_compound"
               control={control}
               render={({ field }) => (
-                <label className={styles.checkboxLabel}>
+                <label className={styles['checkboxLabel']}>
                   <input
                     type="checkbox"
                     checked={field.value}
                     onChange={field.onChange}
-                    className={styles.checkbox}
+                    className={styles['checkbox']}
                   />
                   Compound Exercise
-                  <span className={styles.helperText}>
+                  <span className={styles['helperText']}>
                     Works multiple muscle groups simultaneously
                   </span>
                 </label>
@@ -282,7 +281,7 @@ const CustomExerciseForm: React.FC<CustomExerciseFormProps> = ({
                 {...field}
                 label="Instructions (English)"
                 placeholder="Describe how to perform this exercise..."
-                error={errors.instructions_en?.message}
+                {...(errors.instructions_en?.message && { error: errors.instructions_en.message })}
                 rows={4}
                 required
               />
@@ -297,7 +296,7 @@ const CustomExerciseForm: React.FC<CustomExerciseFormProps> = ({
                 {...field}
                 label="Instructions (Spanish)"
                 placeholder="Describe cómo realizar este ejercicio..."
-                error={errors.instructions_es?.message}
+                {...(errors.instructions_es?.message && { error: errors.instructions_es.message })}
                 rows={4}
                 required
               />
@@ -312,14 +311,14 @@ const CustomExerciseForm: React.FC<CustomExerciseFormProps> = ({
                 {...field}
                 label="Image URL (Optional)"
                 placeholder="https://example.com/exercise-image.jpg"
-                error={errors.media_url?.message}
+                {...(errors.media_url?.message && { error: errors.media_url.message })}
                 helperText="URL to an image demonstrating the exercise"
               />
             )}
           />
         </div>
 
-        <div className={styles.actions}>
+        <div className={styles['actions']}>
           <Button
             type="button"
             variant="ghost"

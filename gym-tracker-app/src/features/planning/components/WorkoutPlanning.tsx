@@ -5,7 +5,7 @@ import { LoadingSpinner } from '../../../components/ui/LoadingSpinner/LoadingSpi
 import WeeklyCalendar from './WeeklyCalendar/WeeklyCalendar';
 import MonthlyCalendar from './MonthlyCalendar/MonthlyCalendar';
 import { WorkoutScheduler } from './WorkoutScheduler';
-import { useAuth } from '../../auth/AuthContext';
+import { useAuth } from '../../auth';
 import { useCalendarNavigation } from '../hooks/useCalendarNavigation';
 import { planningService } from '../../../lib/planning-service';
 import { createWorkoutForDate } from '../services/calendarService';

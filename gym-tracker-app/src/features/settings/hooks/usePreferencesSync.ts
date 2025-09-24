@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useAuth } from '../../auth/AuthContext';
+import { useAuth } from '../../auth';
 import { useAppStore } from '../../../store/appStore';
 import { SettingsService } from '../services/settingsService';
 

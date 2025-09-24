@@ -18,6 +18,7 @@ export interface UserProfile extends BaseEntity {
   locale: 'en' | 'es';
   units: 'metric' | 'imperial';
   theme: 'dark' | 'light' | 'system';
+  timezone: string;
 }
 
 export interface WeightLog extends BaseEntity {
@@ -25,18 +26,18 @@ export interface WeightLog extends BaseEntity {
   user_id: string;
   measured_at: string;
   weight: number;
-  note?: string;
+  note?: string | null;
 }
 
 export interface Workout extends BaseEntity {
   id: number;
   user_id: string;
-  plan_id: number;
+  plan_id: number | null;
   date: string;
   title: string;
   is_completed: boolean;
-  duration_minutes?: number;
-  notes?: string;
+  duration_minutes?: number | null;
+  notes?: string | null;
   exercises: Exercise[];
 }
 
@@ -46,7 +47,7 @@ export interface Exercise extends BaseEntity {
   slug: string;
   name_en: string;
   name_es: string;
-  machine_brand?: string;
+  machine_brand?: string | null;
   order_index: number;
   target_sets: number;
   target_reps: number;
@@ -70,7 +71,7 @@ export interface Plan extends BaseEntity {
   goal_days_per_week: number;
   plan_scope: string;
   start_date: string;
-  meta: Record<string, unknown>;
+  meta: Record<string, unknown> | null;
 }
 
 // API Response types

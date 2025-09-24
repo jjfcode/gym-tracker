@@ -1,6 +1,6 @@
 import { supabase } from '../../../lib/supabase';
 import { AuthService } from '../../../lib/auth';
-import type { UserProfile } from '../../../types/common';
+import type { UserProfile, Plan, Exercise, Workout } from '../../../types/common';
 import type { ExportData, ExportOptions, ProfileFormData } from '../types';
 
 export class SettingsService {
@@ -24,6 +24,7 @@ export class SettingsService {
       // Update profile data
       const updatedProfile = await AuthService.updateUserProfile(userId, {
         display_name: profileData.display_name,
+        timezone: profileData.timezone,
       });
 
       if (!updatedProfile) {
@@ -118,10 +119,15 @@ export class SettingsService {
         if (workoutsError) {
           console.error('Error fetching workouts:', workoutsError);
         } else {
-          exportData.workouts = workouts || [];
+          exportData.workouts = (workouts || []) as unknown as Workout[];
           
-          // Flatten exercises for easier export
-          exportData.exercises = workouts?.flatMap(w => w.exercises || []) || [];
+          // Flatten exercises for easier export and transform exercise_sets to sets
+          exportData.exercises = (workouts?.flatMap(w => 
+            w.exercises?.map(exercise => ({
+              ...exercise,
+              sets: (exercise as unknown as { exercise_sets?: unknown[] }).exercise_sets || []
+            })) || []
+          ) || []) as Exercise[];
         }
       }
 
@@ -159,7 +165,7 @@ export class SettingsService {
         if (plansError) {
           console.error('Error fetching plans:', plansError);
         } else {
-          exportData.plans = plans || [];
+          exportData.plans = (plans || []) as Plan[];
         }
       }
 
@@ -199,13 +205,13 @@ export class SettingsService {
         csv += `${key.toUpperCase()}\n`;
         
         // Headers
-        const headers = Object.keys(items[0]);
+        const headers = Object.keys(items[0] || {});
         csv += headers.join(',') + '\n';
         
         // Data rows
         items.forEach(item => {
           const values = headers.map(header => {
-            const value = item[header];
+            const value = (item as Record<string, unknown>)[header];
             // Escape commas and quotes in CSV
             if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
               return `"${value.replace(/"/g, '""')}"`;

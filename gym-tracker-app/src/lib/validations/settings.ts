@@ -11,18 +11,21 @@ export const profileFormSchema = z.object({
     .string()
     .email('Please enter a valid email address')
     .min(1, 'Email is required'),
+  timezone: z
+    .string()
+    .min(1, 'Timezone is required'),
 });
 
 // Preferences form validation
 export const preferencesFormSchema = z.object({
   theme: z.enum(['light', 'dark', 'system'], {
-    errorMap: () => ({ message: 'Please select a valid theme' }),
+    message: 'Please select a valid theme',
   }),
   language: z.enum(['en', 'es'], {
-    errorMap: () => ({ message: 'Please select a valid language' }),
+    message: 'Please select a valid language',
   }),
   units: z.enum(['metric', 'imperial'], {
-    errorMap: () => ({ message: 'Please select a valid unit system' }),
+    message: 'Please select a valid unit system',
   }),
 });
 

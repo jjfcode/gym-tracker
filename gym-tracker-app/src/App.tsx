@@ -8,7 +8,7 @@ import { UpdatePrompt } from './components/ui/UpdatePrompt/UpdatePrompt';
 import { LoadingSpinner } from './components/ui/LoadingSpinner/LoadingSpinner';
 import { AppLayout } from './components/layout/AppLayout/AppLayout';
 import ErrorBoundary from './components/ErrorBoundary';
-import { useAuth } from './features/auth/AuthContext';
+import { useAuth } from './features/auth';
 
 // Lazy load route components for code splitting
 const AuthFlow = lazy(() => import('./features/auth/components/AuthFlow'));
@@ -19,9 +19,6 @@ const WorkoutPlanning = lazy(() => import('./features/planning/components/Workou
 const ExerciseLibrary = lazy(() => import('./features/exercises/components/ExerciseLibrary'));
 const Settings = lazy(() => import('./features/settings/components/Settings'));
 const Onboarding = lazy(() => import('./features/auth/components/Onboarding'));
-
-// Import the new AuthenticatedRoute component
-import { AuthenticatedRoute } from './components/AuthenticatedRoute';
 
 // Create a separate component for routes that uses auth context
 const AppRoutes: React.FC = () => {

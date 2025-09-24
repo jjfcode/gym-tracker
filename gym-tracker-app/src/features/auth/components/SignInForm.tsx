@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button/Button';
 import { Input } from '../../../components/ui/Input/Input';
 import { Card } from '../../../components/ui/Card/Card';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../useAuth';
 import { signInSchema, type SignInFormData } from '../../../lib/validations/auth';
 import styles from './AuthForms.module.css';
 

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '../../auth/AuthContext';
+import { useAuth } from '../../auth';
 import { ExerciseService } from '../services/exerciseService';
 import type { CustomExercise } from '../types';
 

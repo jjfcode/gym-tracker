@@ -7,7 +7,7 @@ import { WeightChart } from './WeightChart';
 import { WorkoutStatsChart } from './WorkoutStatsChart';
 import { ProgressSummary } from './ProgressSummary';
 import { WeightLogger } from './WeightLogger';
-import { useAuth } from '../../auth/AuthContext';
+import { useAuth } from '../../auth';
 import { progressService } from '../../../lib/progress-service';
 import styles from './ProgressTracking.module.css';
 
@@ -47,18 +47,18 @@ const ProgressTracking: React.FC = () => {
     switch (activeView) {
       case 'overview':
         return (
-          <div className={styles.overview}>
-            <ProgressSummary data={progressData} />
+          <div className={styles['overview']}>
+{progressData && <ProgressSummary data={progressData} />}
             
-            <div className={styles.chartGrid}>
-              <Card className={styles.chartCard}>
+            <div className={styles['chartGrid']}>
+              <Card className={styles['chartCard']}>
                 <h3>Weight Progress</h3>
-                <WeightChart data={weightHistory} timeRange={timeRange} />
+                <WeightChart data={weightHistory || []} timeRange={timeRange} />
               </Card>
               
-              <Card className={styles.chartCard}>
+              <Card className={styles['chartCard']}>
                 <h3>Workout Statistics</h3>
-                <WorkoutStatsChart data={workoutStats} timeRange={timeRange} />
+{workoutStats ? <WorkoutStatsChart data={workoutStats} timeRange={timeRange} /> : <p>No workout data available</p>}
               </Card>
             </div>
           </div>
@@ -66,49 +66,49 @@ const ProgressTracking: React.FC = () => {
         
       case 'weight':
         return (
-          <div className={styles.weightView}>
+          <div className={styles['weightView']}>
             <WeightLogger />
-            <Card className={styles.chartCard}>
+            <Card className={styles['chartCard']}>
               <h3>Weight History</h3>
-              <WeightChart data={weightHistory} timeRange={timeRange} detailed />
+              <WeightChart data={weightHistory || []} timeRange={timeRange} detailed />
             </Card>
           </div>
         );
         
       case 'workouts':
         return (
-          <div className={styles.workoutView}>
-            <Card className={styles.chartCard}>
+          <div className={styles['workoutView']}>
+            <Card className={styles['chartCard']}>
               <h3>Workout Performance</h3>
-              <WorkoutStatsChart data={workoutStats} timeRange={timeRange} detailed />
+{workoutStats ? <WorkoutStatsChart data={workoutStats} timeRange={timeRange} detailed /> : <p>No workout data available</p>}
             </Card>
             
-            <Card className={styles.statsCard}>
+            <Card className={styles['statsCard']}>
               <h3>Workout Statistics</h3>
-              <div className={styles.statGrid}>
-                <div className={styles.statItem}>
-                  <span className={styles.statValue}>
+              <div className={styles['statGrid']}>
+                <div className={styles['statItem']}>
+                  <span className={styles['statValue']}>
                     {workoutStats?.totalWorkouts || 0}
                   </span>
-                  <span className={styles.statLabel}>Total Workouts</span>
+                  <span className={styles['statLabel']}>Total Workouts</span>
                 </div>
-                <div className={styles.statItem}>
-                  <span className={styles.statValue}>
+                <div className={styles['statItem']}>
+                  <span className={styles['statValue']}>
                     {workoutStats?.averageDuration || 0}min
                   </span>
-                  <span className={styles.statLabel}>Avg Duration</span>
+                  <span className={styles['statLabel']}>Avg Duration</span>
                 </div>
-                <div className={styles.statItem}>
-                  <span className={styles.statValue}>
+                <div className={styles['statItem']}>
+                  <span className={styles['statValue']}>
                     {workoutStats?.totalVolume || 0}kg
                   </span>
-                  <span className={styles.statLabel}>Total Volume</span>
+                  <span className={styles['statLabel']}>Total Volume</span>
                 </div>
-                <div className={styles.statItem}>
-                  <span className={styles.statValue}>
+                <div className={styles['statItem']}>
+                  <span className={styles['statValue']}>
                     {workoutStats?.consistency || 0}%
                   </span>
-                  <span className={styles.statLabel}>Consistency</span>
+                  <span className={styles['statLabel']}>Consistency</span>
                 </div>
               </div>
             </Card>
@@ -117,8 +117,8 @@ const ProgressTracking: React.FC = () => {
         
       case 'exercises':
         return (
-          <div className={styles.exerciseView}>
-            <Card className={styles.exerciseProgress}>
+          <div className={styles['exerciseView']}>
+            <Card className={styles['exerciseProgress']}>
               <h3>Exercise Progress</h3>
               <p>Coming soon - Track progress for individual exercises</p>
             </Card>
@@ -131,15 +131,15 @@ const ProgressTracking: React.FC = () => {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <div className={styles.titleSection}>
+    <div className={styles['container']}>
+      <div className={styles['header']}>
+        <div className={styles['titleSection']}>
           <h1>Progress Tracking</h1>
           <p>Monitor your fitness journey and celebrate your achievements</p>
         </div>
         
-        <div className={styles.controls}>
-          <div className={styles.timeRangeSelector}>
+        <div className={styles['controls']}>
+          <div className={styles['timeRangeSelector']}>
             <Button
               variant={timeRange === 'week' ? 'primary' : 'outline'}
               size="sm"
@@ -165,7 +165,7 @@ const ProgressTracking: React.FC = () => {
         </div>
       </div>
 
-      <div className={styles.navigation}>
+      <div className={styles['navigation']}>
         <Button
           variant={activeView === 'overview' ? 'primary' : 'ghost'}
           onClick={() => setActiveView('overview')}
@@ -192,7 +192,7 @@ const ProgressTracking: React.FC = () => {
         </Button>
       </div>
 
-      <div className={styles.content}>
+      <div className={styles['content']}>
         {renderContent()}
       </div>
     </div>

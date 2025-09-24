@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card } from '../../../components/ui/Card/Card';
 import { Button } from '../../../components/ui/Button/Button';
 import { Input } from '../../../components/ui/Input/Input';
-import { useAuth } from '../../auth/AuthContext';
+import { useAuth } from '../../auth';
 import { exerciseService } from '../../../lib/exercise-service';
 import styles from './CreateExerciseModal.module.css';
 
@@ -44,7 +44,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
     }
   });
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -84,17 +84,17 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
   };
 
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <Card className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
+    <div className={styles['modalOverlay']} onClick={onClose}>
+      <Card className={styles['modal']} onClick={(e) => e.stopPropagation()}>
+        <div className={styles['modalHeader']}>
           <h3>Create Custom Exercise</h3>
           <Button variant="ghost" size="sm" onClick={onClose}>
             ×
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.formGroup}>
+        <form onSubmit={handleSubmit} className={styles['form']}>
+          <div className={styles['formGroup']}>
             <label htmlFor="name">Exercise Name *</label>
             <Input
               id="name"
@@ -106,26 +106,26 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
             />
           </div>
 
-          <div className={styles.formGroup}>
+          <div className={styles['formGroup']}>
             <label htmlFor="description">Description</label>
             <textarea
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
               placeholder="Describe the exercise"
-              className={styles.textarea}
+              className={styles['textarea']}
               rows={3}
             />
           </div>
 
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
+          <div className={styles['formRow']}>
+            <div className={styles['formGroup']}>
               <label htmlFor="category">Category *</label>
               <select
                 id="category"
                 value={formData.category}
                 onChange={(e) => handleInputChange('category', e.target.value)}
-                className={styles.select}
+                className={styles['select']}
                 required
               >
                 <option value="">Select category</option>
@@ -137,7 +137,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
               </select>
             </div>
 
-            <div className={styles.formGroup}>
+            <div className={styles['formGroup']}>
               <label htmlFor="equipment">Equipment</label>
               <Input
                 id="equipment"
@@ -149,9 +149,9 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
             </div>
           </div>
 
-          <div className={styles.formGroup}>
+          <div className={styles['formGroup']}>
             <label>Difficulty</label>
-            <div className={styles.difficultyButtons}>
+            <div className={styles['difficultyButtons']}>
               {['beginner', 'intermediate', 'advanced'].map(level => (
                 <Button
                   key={level}
@@ -166,15 +166,15 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
             </div>
           </div>
 
-          <div className={styles.formGroup}>
+          <div className={styles['formGroup']}>
             <label>Primary Muscles *</label>
-            <div className={styles.muscleGrid}>
+            <div className={styles['muscleGrid']}>
               {muscleGroups.map(muscle => (
                 <button
                   key={muscle}
                   type="button"
-                  className={`${styles.muscleButton} ${
-                    formData.primary_muscles.includes(muscle) ? styles.selected : ''
+                  className={`${styles['muscleButton']} ${
+                    formData.primary_muscles.includes(muscle) ? styles['selected'] : ''
                   }`}
                   onClick={() => handleMuscleToggle(muscle, true)}
                 >
@@ -184,15 +184,15 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
             </div>
           </div>
 
-          <div className={styles.formGroup}>
+          <div className={styles['formGroup']}>
             <label>Secondary Muscles</label>
-            <div className={styles.muscleGrid}>
+            <div className={styles['muscleGrid']}>
               {muscleGroups.map(muscle => (
                 <button
                   key={muscle}
                   type="button"
-                  className={`${styles.muscleButton} ${
-                    formData.secondary_muscles.includes(muscle) ? styles.selected : ''
+                  className={`${styles['muscleButton']} ${
+                    formData.secondary_muscles.includes(muscle) ? styles['selected'] : ''
                   }`}
                   onClick={() => handleMuscleToggle(muscle, false)}
                 >
@@ -202,10 +202,10 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
             </div>
           </div>
 
-          <div className={styles.formGroup}>
+          <div className={styles['formGroup']}>
             <label>Instructions</label>
             {formData.instructions.map((instruction, index) => (
-              <div key={index} className={styles.instructionRow}>
+              <div key={index} className={styles['instructionRow']}>
                 <Input
                   type="text"
                   value={instruction}
@@ -234,7 +234,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
             </Button>
           </div>
 
-          <div className={styles.modalActions}>
+          <div className={styles['modalActions']}>
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>

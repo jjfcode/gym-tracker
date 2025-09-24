@@ -1,9 +1,9 @@
 import React from 'react';
-import { render, RenderOptions } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { render } from '@testing-library/react';
+import type { RenderOptions } from '@testing-library/react';
 import { vi } from 'vitest';
-import { AuthProvider } from '../features/auth/AuthContext';
 import type { AuthUser } from '../types/auth';
+import { MockAuthProvider } from './MockAuthProvider';
 
 // Mock Supabase client
 export const mockSupabaseClient = {
@@ -34,7 +34,7 @@ export const mockAuthUser: AuthUser = {
   aud: 'authenticated',
   role: 'authenticated',
   email_confirmed_at: '2024-01-01T00:00:00Z',
-  phone_confirmed_at: null,
+  phone_confirmed_at: '2024-01-01T00:00:00Z',
   confirmed_at: '2024-01-01T00:00:00Z',
   last_sign_in_at: '2024-01-01T00:00:00Z',
   app_metadata: {},
@@ -43,44 +43,17 @@ export const mockAuthUser: AuthUser = {
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
   profile: {
+    id: 'test-profile-id',
     user_id: 'test-user-id',
     display_name: 'Test User',
     locale: 'en',
     units: 'imperial',
     theme: 'system',
+    timezone: 'America/New_York',
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
   },
 };
-
-// Mock auth context provider
-interface MockAuthContextProps {
-  children: React.ReactNode;
-  initialUser?: AuthUser | null;
-}
-
-function MockAuthProvider({ children, initialUser = null }: MockAuthContextProps) {
-  const mockAuthContext = {
-    user: initialUser,
-    isLoading: false,
-    isAuthenticated: !!initialUser,
-    error: null,
-    signIn: vi.fn().mockResolvedValue(undefined),
-    signUp: vi.fn().mockResolvedValue(undefined),
-    signOut: vi.fn().mockResolvedValue(undefined),
-    resetPassword: vi.fn().mockResolvedValue(undefined),
-    updatePassword: vi.fn().mockResolvedValue(undefined),
-    clearError: vi.fn(),
-  };
-
-  return (
-    <BrowserRouter>
-      <div data-testid="mock-auth-provider">
-        {children}
-      </div>
-    </BrowserRouter>
-  );
-}
 
 // Custom render with auth context
 export const renderWithAuth = (

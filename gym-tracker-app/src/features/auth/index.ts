@@ -1,5 +1,6 @@
 // Auth context and hooks
-export { AuthProvider, useAuth } from './AuthContext';
+export { AuthProvider } from './AuthContext';
+export { useAuth } from './useAuth';
 
 // Auth guards and route protection
 export { AuthGuard, ProtectedRoute, PublicRoute } from './AuthGuard';

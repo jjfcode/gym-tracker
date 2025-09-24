@@ -7,7 +7,7 @@ import { LoadingSpinner } from '../../../components/ui/LoadingSpinner/LoadingSpi
 import { ExerciseCard } from './ExerciseCard';
 import { ExerciseFilters } from './ExerciseFilters';
 import { CreateExerciseModal } from './CreateExerciseModal';
-import { useAuth } from '../../auth/AuthContext';
+import { useAuth } from '../../auth';
 import { exerciseService } from '../../../lib/exercise-service';
 import type { Exercise, ExerciseFilters as FilterType } from '../../../types/exercise';
 import styles from './ExerciseLibrary.module.css';
@@ -55,14 +55,14 @@ const ExerciseLibrary: React.FC = () => {
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <div className={styles.titleSection}>
+    <div className={styles['container']}>
+      <div className={styles['header']}>
+        <div className={styles['titleSection']}>
           <h1>Exercise Library</h1>
           <p>Discover and manage exercises for your workouts</p>
         </div>
         
-        <div className={styles.actions}>
+        <div className={styles['actions']}>
           <Button 
             variant="primary"
             onClick={() => setShowCreateModal(true)}
@@ -72,27 +72,27 @@ const ExerciseLibrary: React.FC = () => {
         </div>
       </div>
 
-      <div className={styles.searchAndFilters}>
-        <div className={styles.searchBar}>
+      <div className={styles['searchAndFilters']}>
+        <div className={styles['searchBar']}>
           <Input
             type="text"
             placeholder="Search exercises..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={styles.searchInput}
+            className={styles['searchInput']}
           />
         </div>
 
         <ExerciseFilters
           filters={filters}
-          categories={categories}
-          muscleGroups={muscleGroups}
+          categories={categories || []}
+          muscleGroups={muscleGroups || []}
           onFilterChange={handleFilterChange}
         />
       </div>
 
-      <div className={styles.content}>
-        <div className={styles.exerciseGrid}>
+      <div className={styles['content']}>
+        <div className={styles['exerciseGrid']}>
           {exercises?.map((exercise) => (
             <ExerciseCard
               key={exercise.id}
@@ -104,7 +104,7 @@ const ExerciseLibrary: React.FC = () => {
         </div>
 
         {exercises?.length === 0 && (
-          <Card className={styles.emptyState}>
+          <Card className={styles['emptyState']}>
             <h3>No exercises found</h3>
             <p>
               {searchTerm || Object.keys(filters).length > 0
@@ -124,9 +124,9 @@ const ExerciseLibrary: React.FC = () => {
 
       {/* Exercise Details Sidebar */}
       {selectedExercise && (
-        <div className={styles.sidebar}>
-          <Card className={styles.exerciseDetails}>
-            <div className={styles.detailsHeader}>
+        <div className={styles['sidebar']}>
+          <Card className={styles['exerciseDetails']}>
+            <div className={styles['detailsHeader']}>
               <h3>{selectedExercise.name}</h3>
               <Button
                 variant="ghost"
@@ -137,17 +137,17 @@ const ExerciseLibrary: React.FC = () => {
               </Button>
             </div>
 
-            <div className={styles.exerciseInfo}>
-              <div className={styles.infoSection}>
+            <div className={styles['exerciseInfo']}>
+              <div className={styles['infoSection']}>
                 <h4>Category</h4>
                 <p>{selectedExercise.category}</p>
               </div>
 
-              <div className={styles.infoSection}>
+              <div className={styles['infoSection']}>
                 <h4>Primary Muscles</h4>
-                <div className={styles.muscleList}>
+                <div className={styles['muscleList']}>
                   {selectedExercise.primary_muscles?.map((muscle) => (
-                    <span key={muscle} className={styles.muscleTag}>
+                    <span key={muscle} className={styles['muscleTag']}>
                       {muscle}
                     </span>
                   ))}
@@ -155,11 +155,11 @@ const ExerciseLibrary: React.FC = () => {
               </div>
 
               {selectedExercise.secondary_muscles && selectedExercise.secondary_muscles.length > 0 && (
-                <div className={styles.infoSection}>
+                <div className={styles['infoSection']}>
                   <h4>Secondary Muscles</h4>
-                  <div className={styles.muscleList}>
+                  <div className={styles['muscleList']}>
                     {selectedExercise.secondary_muscles.map((muscle) => (
-                      <span key={muscle} className={styles.muscleTagSecondary}>
+                      <span key={muscle} className={styles['muscleTagSecondary']}>
                         {muscle}
                       </span>
                     ))}
@@ -168,16 +168,16 @@ const ExerciseLibrary: React.FC = () => {
               )}
 
               {selectedExercise.description && (
-                <div className={styles.infoSection}>
+                <div className={styles['infoSection']}>
                   <h4>Description</h4>
                   <p>{selectedExercise.description}</p>
                 </div>
               )}
 
               {selectedExercise.instructions && (
-                <div className={styles.infoSection}>
+                <div className={styles['infoSection']}>
                   <h4>Instructions</h4>
-                  <ol className={styles.instructionsList}>
+                  <ol className={styles['instructionsList']}>
                     {selectedExercise.instructions.map((instruction, index) => (
                       <li key={index}>{instruction}</li>
                     ))}
@@ -185,7 +185,7 @@ const ExerciseLibrary: React.FC = () => {
                 </div>
               )}
 
-              <div className={styles.exerciseActions}>
+              <div className={styles['exerciseActions']}>
                 <Button variant="primary" size="sm">
                   Add to Workout
                 </Button>
@@ -207,8 +207,8 @@ const ExerciseLibrary: React.FC = () => {
       {showCreateModal && (
         <CreateExerciseModal
           onClose={() => setShowCreateModal(false)}
-          categories={categories}
-          muscleGroups={muscleGroups}
+          categories={categories || []}
+          muscleGroups={muscleGroups || []}
         />
       )}
     </div>
