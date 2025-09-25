@@ -44,7 +44,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setTimeout(() => {
             console.log('Auth initialization timeout, resolving with null');
             resolve(null);
-          }, 8000)
+          }, 6000) // Reduced timeout to work with auth.ts timeout
         );
         
         const currentUser = await Promise.race([authPromise, timeoutPromise]);

@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card } from '../../../components/ui/Card/Card';
 import { Button } from '../../../components/ui/Button/Button';
 import { Input } from '../../../components/ui/Input/Input';
-import { useAuth } from '../../auth';
-import { progressService } from '../../../lib/progress-service';
+import { useUpsertWeightLog } from '../hooks/useWeightData';
 import styles from './WeightLogger.module.css';
 
 export const WeightLogger: React.FC = () => {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
   const [weight, setWeight] = useState('');
   const [notes, setNotes] = useState('');
   const getCurrentDateString = (): string => {
@@ -18,26 +14,23 @@ export const WeightLogger: React.FC = () => {
   };
   const [date, setDate] = useState<string>(getCurrentDateString());
 
-  const logWeightMutation = useMutation({
-    mutationFn: () => progressService.logWeight(
-      user!.id, 
-      Number(weight), 
-      date, 
-      notes || undefined
-    ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['weightHistory'] });
-      queryClient.invalidateQueries({ queryKey: ['progressData'] });
-      setWeight('');
-      setNotes('');
-      setDate(getCurrentDateString());
-    },
-  });
+  const logWeightMutation = useUpsertWeightLog();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (weight && date) {
-      logWeightMutation.mutate();
+      logWeightMutation.mutate({
+        weight: Number(weight),
+        measured_at: date,
+        note: notes || undefined,
+      }, {
+        onSuccess: () => {
+          // Reset form after successful submission
+          setWeight('');
+          setNotes('');
+          setDate(getCurrentDateString());
+        }
+      });
     }
   };
 

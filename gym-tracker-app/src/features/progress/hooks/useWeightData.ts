@@ -29,7 +29,8 @@ export const useWeightLogs = () => {
   return useQuery({
     queryKey: weightQueryKeys.logs(),
     queryFn: getWeightLogs,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // Always consider data stale to ensure fresh data
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes when not in use
   });
 };
 
@@ -41,7 +42,8 @@ export const useWeightLogsByDateRange = (startDate: string, endDate: string) => 
     queryKey: weightQueryKeys.logsByDateRange(startDate, endDate),
     queryFn: () => getWeightLogsByDateRange(startDate, endDate),
     enabled: Boolean(startDate && endDate),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // Always consider data stale to ensure fresh data
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes when not in use
   });
 };
 
@@ -64,7 +66,7 @@ export const useWeightLogByDate = (date: string) => {
     queryKey: weightQueryKeys.byDate(date),
     queryFn: async () => {
       // Check if Supabase is configured
-      if (!import.meta.env.VITE_SUPABASE_URL) {
+      if (!import.meta.env?.['VITE_SUPABASE_URL']) {
         // Demo mode - return null (no existing log)
         return null;
       }
@@ -109,7 +111,7 @@ export const useUpdateWeightLog = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<WeightLogFormData> }) =>
       updateWeightLog(id, {
-        weight: data.weight,
+        ...(data.weight !== undefined && { weight: data.weight }),
         note: data.note || null,
       }),
     onSuccess: (updatedLog) => {
@@ -155,7 +157,8 @@ export const useUpsertWeightLog = () => {
   return useMutation({
     mutationFn: async (data: WeightLogFormData) => {
       // Check if Supabase is configured
-      if (!import.meta.env.VITE_SUPABASE_URL) {
+      const supabaseUrl = import.meta.env?.['VITE_SUPABASE_URL'];
+      if (!supabaseUrl) {
         // Demo mode - simulate API call
         await new Promise(resolve => setTimeout(resolve, 500));
         return {
@@ -175,18 +178,32 @@ export const useUpsertWeightLog = () => {
       });
     },
     onSuccess: (upsertedLog) => {
-      // Invalidate and refetch weight logs
-      queryClient.invalidateQueries({ queryKey: weightQueryKeys.all });
+      console.log('Weight log upserted successfully:', upsertedLog);
+      
+      // Invalidate and refetch weight logs immediately
+      queryClient.invalidateQueries({ 
+        queryKey: weightQueryKeys.all,
+        refetchType: 'all' // Force refetch of all queries
+      });
+      
+      // Also invalidate any cached date range queries
+      queryClient.invalidateQueries({ 
+        queryKey: ['weight', 'logs', 'dateRange'],
+        refetchType: 'all'
+      });
       
       // Optimistically update the logs cache
       queryClient.setQueryData<WeightLog[]>(weightQueryKeys.logs(), (old) => {
+        console.log('Updating cache with new weight log. Old data:', old?.length, 'entries');
         if (!old) return [upsertedLog];
         
         // Remove any existing log for the same date and add the new one
         const filtered = old.filter(log => log.measured_at !== upsertedLog.measured_at);
-        return [upsertedLog, ...filtered].sort((a, b) => 
+        const newData = [upsertedLog, ...filtered].sort((a, b) => 
           new Date(b.measured_at).getTime() - new Date(a.measured_at).getTime()
         );
+        console.log('New cache data:', newData.length, 'entries, latest:', newData[0]?.measured_at);
+        return newData;
       });
     },
   });

@@ -3,11 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { Card } from '../../../components/ui/Card/Card';
 import { Button } from '../../../components/ui/Button/Button';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner/LoadingSpinner';
-import { WeightChart } from './WeightChart';
+import WeightChart from './WeightChart/WeightChart';
 import { WorkoutStatsChart } from './WorkoutStatsChart';
 import { ProgressSummary } from './ProgressSummary';
 import { WeightLogger } from './WeightLogger';
 import { useAuth } from '../../auth';
+import { useWeightLogs } from '../hooks/useWeightData';
 import { progressService } from '../../../lib/progress-service';
 import styles from './ProgressTracking.module.css';
 
@@ -25,12 +26,19 @@ const ProgressTracking: React.FC = () => {
     enabled: !!user?.id,
   });
 
-  // Get weight history
-  const { data: weightHistory } = useQuery({
-    queryKey: ['weightHistory', user?.id, timeRange],
-    queryFn: () => progressService.getWeightHistory(user!.id, timeRange),
-    enabled: !!user?.id,
-  });
+  // Get weight history - use the correct hook that will be invalidated
+  const { data: weightLogs } = useWeightLogs();
+  const weightHistory = weightLogs || [];
+
+  // Convert timeRange format
+  const convertTimeRange = (range: 'week' | 'month' | 'year'): '1M' | '3M' | '6M' | '1Y' | 'ALL' => {
+    switch (range) {
+      case 'week': return '1M';
+      case 'month': return '3M';
+      case 'year': return '1Y';
+      default: return 'ALL';
+    }
+  };
 
   // Get workout statistics
   const { data: workoutStats } = useQuery({
@@ -53,7 +61,7 @@ const ProgressTracking: React.FC = () => {
             <div className={styles['chartGrid']}>
               <Card className={styles['chartCard']}>
                 <h3>Weight Progress</h3>
-                <WeightChart data={weightHistory || []} timeRange={timeRange} />
+                <WeightChart data={weightHistory || []} timeRange={convertTimeRange(timeRange)} />
               </Card>
               
               <Card className={styles['chartCard']}>
@@ -70,7 +78,7 @@ const ProgressTracking: React.FC = () => {
             <WeightLogger />
             <Card className={styles['chartCard']}>
               <h3>Weight History</h3>
-              <WeightChart data={weightHistory || []} timeRange={timeRange} detailed />
+              <WeightChart data={weightHistory || []} timeRange={convertTimeRange(timeRange)} />
             </Card>
           </div>
         );

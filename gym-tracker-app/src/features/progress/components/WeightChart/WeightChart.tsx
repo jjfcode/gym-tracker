@@ -7,7 +7,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  ReferenceLine,
 } from 'recharts';
 import { Card } from '../../../../components/ui';
 import { useAppStore } from '../../../../store/appStore';
@@ -18,7 +17,6 @@ import styles from './WeightChart.module.css';
 interface WeightChartProps {
   data: WeightLog[];
   showMovingAverage?: boolean;
-  showTrendLine?: boolean;
   height?: number;
   className?: string;
   timeRange?: '1M' | '3M' | '6M' | '1Y' | 'ALL';
@@ -35,7 +33,6 @@ interface ChartDataPoint {
 const WeightChart: React.FC<WeightChartProps> = ({
   data,
   showMovingAverage = true,
-  showTrendLine = false,
   height = 300,
   className = '',
   timeRange = 'ALL',
@@ -44,6 +41,13 @@ const WeightChart: React.FC<WeightChartProps> = ({
 
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
+
+    // Debug logging
+    console.log('WeightChart: Raw data received:', data.length, 'entries');
+    console.log('WeightChart: Latest entries:', data.slice(0, 3).map(d => ({ 
+      date: d.measured_at, 
+      weight: d.weight 
+    })));
 
     // Filter data based on time range
     let filteredData = [...data];
@@ -67,12 +71,15 @@ const WeightChart: React.FC<WeightChartProps> = ({
       }
       
       filteredData = data.filter(log => new Date(log.measured_at) >= cutoffDate);
+      console.log('WeightChart: After filtering for timeRange', timeRange + ':', filteredData.length, 'entries');
     }
 
     // Sort by date
     const sortedData = filteredData.sort((a, b) => 
       new Date(a.measured_at).getTime() - new Date(b.measured_at).getTime()
     );
+
+    console.log('WeightChart: After sorting:', sortedData.map(d => d.measured_at));
 
     // Convert weights to display units and calculate moving average
     const movingAverageData = showMovingAverage 
@@ -83,17 +90,30 @@ const WeightChart: React.FC<WeightChartProps> = ({
           average: log.weight 
         }));
 
-    return movingAverageData.map(item => ({
-      date: item.date,
+    const finalData = movingAverageData.map(item => ({
+      date: item.date, // Keep original ISO date string for proper sorting and processing
       weight: getDisplayWeight(item.weight, units),
       average: showMovingAverage ? getDisplayWeight(item.average, units) : undefined,
       formattedDate: formatDate(item.date),
       originalDate: item.date,
+      // Add a display date for better debugging
+      displayDate: new Date(item.date).toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      }),
     }));
+
+    console.log('WeightChart: Final chart data:', finalData.map(d => ({ 
+      date: d.date, 
+      displayDate: d.displayDate,
+      weight: d.weight 
+    })));
+
+    return finalData;
   }, [data, units, showMovingAverage, timeRange]);
 
-  const { minWeight, maxWeight, weightRange } = useMemo(() => {
-    if (chartData.length === 0) return { minWeight: 0, maxWeight: 100, weightRange: 100 };
+  const { minWeight, maxWeight } = useMemo(() => {
+    if (chartData.length === 0) return { minWeight: 0, maxWeight: 100 };
 
     const weights = chartData.map(d => d.weight);
     const min = Math.min(...weights);
@@ -106,27 +126,28 @@ const WeightChart: React.FC<WeightChartProps> = ({
     return {
       minWeight: Math.max(0, min - padding),
       maxWeight: max + padding,
-      weightRange: range,
     };
   }, [chartData]);
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload as ChartDataPoint;
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: ChartDataPoint }> }) => {
+    if (active && payload && payload.length > 0) {
+      const data = payload[0]?.payload;
+      if (!data) return null;
+      
       return (
-        <div className={styles.tooltip}>
-          <p className={styles.tooltipDate}>{data.formattedDate}</p>
-          <div className={styles.tooltipContent}>
-            <div className={styles.tooltipItem}>
-              <span className={styles.tooltipLabel}>Weight:</span>
-              <span className={styles.tooltipValue}>
+        <div className={styles['tooltip']}>
+          <p className={styles['tooltipDate']}>{data.formattedDate}</p>
+          <div className={styles['tooltipContent']}>
+            <div className={styles['tooltipItem']}>
+              <span className={styles['tooltipLabel']}>Weight:</span>
+              <span className={styles['tooltipValue']}>
                 {formatWeight(data.weight, units)}
               </span>
             </div>
             {showMovingAverage && data.average && (
-              <div className={styles.tooltipItem}>
-                <span className={styles.tooltipLabel}>7-day avg:</span>
-                <span className={styles.tooltipValue}>
+              <div className={styles['tooltipItem']}>
+                <span className={styles['tooltipLabel']}>7-day avg:</span>
+                <span className={styles['tooltipValue']}>
                   {formatWeight(data.average, units)}
                 </span>
               </div>
@@ -139,11 +160,21 @@ const WeightChart: React.FC<WeightChartProps> = ({
   };
 
   const formatXAxisTick = (tickItem: string) => {
-    const date = new Date(tickItem);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric' 
-    });
+    try {
+      const date = new Date(tickItem);
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date in formatXAxisTick:', tickItem);
+        return tickItem;
+      }
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    } catch (error) {
+      console.error('Error formatting X-axis tick:', error, tickItem);
+      return tickItem;
+    }
   };
 
   const formatYAxisTick = (value: number) => {
@@ -152,10 +183,10 @@ const WeightChart: React.FC<WeightChartProps> = ({
 
   if (chartData.length === 0) {
     return (
-      <Card className={`${styles.container} ${className}`}>
-        <div className={styles.emptyState}>
-          <p className={styles.emptyTitle}>No weight data available</p>
-          <p className={styles.emptyDescription}>
+      <Card className={`${styles['container']} ${className}`}>
+        <div className={styles['emptyState']}>
+          <p className={styles['emptyTitle']}>No weight data available</p>
+          <p className={styles['emptyDescription']}>
             Start logging your weight to see your progress chart.
           </p>
         </div>
@@ -164,26 +195,27 @@ const WeightChart: React.FC<WeightChartProps> = ({
   }
 
   return (
-    <Card className={`${styles.container} ${className}`}>
-      <div className={styles.header}>
-        <h3 className={styles.title}>Weight Progress</h3>
-        <div className={styles.legend}>
-          <div className={styles.legendItem}>
-            <div className={`${styles.legendColor} ${styles.weightColor}`} />
+    <Card className={`${styles['container']} ${className}`}>
+      <div className={styles['header']}>
+        <h3 className={styles['title']}>Weight Progress</h3>
+        <div className={styles['legend']}>
+          <div className={styles['legendItem']}>
+            <div className={`${styles['legendColor']} ${styles['weightColor']}`} />
             <span>Weight</span>
           </div>
           {showMovingAverage && (
-            <div className={styles.legendItem}>
-              <div className={`${styles.legendColor} ${styles.averageColor}`} />
+            <div className={styles['legendItem']}>
+              <div className={`${styles['legendColor']} ${styles['averageColor']}`} />
               <span>7-day average</span>
             </div>
           )}
         </div>
       </div>
       
-      <div className={styles.chartContainer} style={{ height }}>
+      <div className={styles['chartContainer']} style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
+            key={`chart-${chartData.length}-${chartData[0]?.date || 'empty'}`}
             data={chartData}
             margin={{
               top: 20,

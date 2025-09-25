@@ -56,6 +56,7 @@ export function usePreferencesSync() {
         return () => clearTimeout(timeoutId);
       }
     }
+    return undefined;
   }, [user?.id, user?.profile, theme, language, units]);
 
   return {
