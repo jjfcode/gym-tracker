@@ -49,13 +49,13 @@ const Onboarding: React.FC = () => {
         );
 
         try {
-          const { error: profileError } = await Promise.race([
+          const result = await Promise.race([
             profileUpdatePromise,
             profileTimeoutPromise
-          ]);
+          ]) as { error?: Error | null };
 
-          if (profileError) {
-            console.warn('Profile update failed, but continuing:', profileError);
+          if (result.error) {
+            console.warn('Profile update failed, but continuing:', result.error);
           } else {
             console.log('Profile updated successfully');
           }
@@ -79,10 +79,11 @@ const Onboarding: React.FC = () => {
               setTimeout(() => reject(new Error('Weight insert timeout')), 5000)
             );
 
-            const { error: weightError } = await Promise.race([
+            const result = await Promise.race([
               weightInsertPromise,
               weightTimeoutPromise
-            ]);
+            ]) as { error?: Error | null };
+            const weightError = result.error;
 
             if (weightError) {
               console.warn('Weight logging failed, but continuing:', weightError);
@@ -143,11 +144,11 @@ const Onboarding: React.FC = () => {
     switch (step) {
       case 1:
         return (
-          <div className={styles.stepContent}>
+          <div className={styles['stepContent']}>
             <h2>Welcome to Gym Tracker!</h2>
             <p>Let's set up your profile to personalize your experience.</p>
             
-            <div className={styles.formGroup}>
+            <div className={styles['formGroup']}>
               <label htmlFor="full_name">Full Name</label>
               <Input
                 id="full_name"
@@ -159,7 +160,7 @@ const Onboarding: React.FC = () => {
               />
             </div>
 
-            <div className={styles.formGroup}>
+            <div className={styles['formGroup']}>
               <label htmlFor="weight">Current Weight (optional)</label>
               <Input
                 id="weight"
@@ -170,7 +171,7 @@ const Onboarding: React.FC = () => {
               />
             </div>
 
-            <div className={styles.formGroup}>
+            <div className={styles['formGroup']}>
               <label htmlFor="height">Height (optional)</label>
               <Input
                 id="height"
@@ -181,28 +182,28 @@ const Onboarding: React.FC = () => {
               />
             </div>
 
-            <div className={styles.formGroup}>
+            <div className={styles['formGroup']}>
               <label>Unit System</label>
-              <div className={styles.optionGrid}>
+              <div className={styles['optionGrid']}>
                 <button
                   type="button"
-                  className={`${styles.optionCard} ${
-                    formData.units === 'imperial' ? styles.selected : ''
+                  className={`${styles['optionCard']} ${
+                    formData.units === 'imperial' ? styles['selected'] : ''
                   }`}
                   onClick={() => handleInputChange('units', 'imperial')}
                 >
-                  <span className={styles.optionLabel}>Imperial</span>
-                  <span className={styles.optionDesc}>lbs, inches, °F</span>
+                  <span className={styles['optionLabel']}>Imperial</span>
+                  <span className={styles['optionDesc']}>lbs, inches, °F</span>
                 </button>
                 <button
                   type="button"
-                  className={`${styles.optionCard} ${
-                    formData.units === 'metric' ? styles.selected : ''
+                  className={`${styles['optionCard']} ${
+                    formData.units === 'metric' ? styles['selected'] : ''
                   }`}
                   onClick={() => handleInputChange('units', 'metric')}
                 >
-                  <span className={styles.optionLabel}>Metric</span>
-                  <span className={styles.optionDesc}>kg, cm, °C</span>
+                  <span className={styles['optionLabel']}>Metric</span>
+                  <span className={styles['optionDesc']}>kg, cm, °C</span>
                 </button>
               </div>
             </div>
@@ -211,11 +212,11 @@ const Onboarding: React.FC = () => {
 
       case 2:
         return (
-          <div className={styles.stepContent}>
+          <div className={styles['stepContent']}>
             <h2>Your Fitness Goals</h2>
             <p>What's your primary fitness goal?</p>
             
-            <div className={styles.optionGrid}>
+            <div className={styles['optionGrid']}>
               {[
                 { value: 'weight_loss', label: 'Weight Loss', icon: '📉' },
                 { value: 'muscle_gain', label: 'Muscle Gain', icon: '💪' },
@@ -226,13 +227,13 @@ const Onboarding: React.FC = () => {
                 <button
                   key={goal.value}
                   type="button"
-                  className={`${styles.optionCard} ${
-                    formData.fitness_goal === goal.value ? styles.selected : ''
+                  className={`${styles['optionCard']} ${
+                    formData.fitness_goal === goal.value ? styles['selected'] : ''
                   }`}
                   onClick={() => handleInputChange('fitness_goal', goal.value)}
                 >
-                  <span className={styles.optionIcon}>{goal.icon}</span>
-                  <span className={styles.optionLabel}>{goal.label}</span>
+                  <span className={styles['optionIcon']}>{goal.icon}</span>
+                  <span className={styles['optionLabel']}>{goal.label}</span>
                 </button>
               ))}
             </div>
@@ -241,13 +242,13 @@ const Onboarding: React.FC = () => {
 
       case 3:
         return (
-          <div className={styles.stepContent}>
+          <div className={styles['stepContent']}>
             <h2>Experience & Schedule</h2>
             <p>Tell us about your fitness experience and workout schedule.</p>
             
-            <div className={styles.formGroup}>
+            <div className={styles['formGroup']}>
               <label>Experience Level</label>
-              <div className={styles.optionGrid}>
+              <div className={styles['optionGrid']}>
                 {[
                   { value: 'beginner', label: 'Beginner', desc: 'New to fitness' },
                   { value: 'intermediate', label: 'Intermediate', desc: '6+ months experience' },
@@ -256,19 +257,19 @@ const Onboarding: React.FC = () => {
                   <button
                     key={level.value}
                     type="button"
-                    className={`${styles.optionCard} ${
-                      formData.experience_level === level.value ? styles.selected : ''
+                    className={`${styles['optionCard']} ${
+                      formData.experience_level === level.value ? styles['selected'] : ''
                     }`}
                     onClick={() => handleInputChange('experience_level', level.value)}
                   >
-                    <span className={styles.optionLabel}>{level.label}</span>
-                    <span className={styles.optionDesc}>{level.desc}</span>
+                    <span className={styles['optionLabel']}>{level.label}</span>
+                    <span className={styles['optionDesc']}>{level.desc}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className={styles.formGroup}>
+            <div className={styles['formGroup']}>
               <label htmlFor="workout_frequency">
                 Workouts per week: {formData.workout_frequency}
               </label>
@@ -279,9 +280,9 @@ const Onboarding: React.FC = () => {
                 max="7"
                 value={formData.workout_frequency}
                 onChange={(e) => handleInputChange('workout_frequency', Number(e.target.value))}
-                className={styles.slider}
+                className={styles['slider']}
               />
-              <div className={styles.sliderLabels}>
+              <div className={styles['sliderLabels']}>
                 <span>1</span>
                 <span>7</span>
               </div>
@@ -295,21 +296,21 @@ const Onboarding: React.FC = () => {
   };
 
   return (
-    <div className={styles.container}>
-      <Card className={styles.onboardingCard}>
-        <div className={styles.header}>
-          <div className={styles.progressBar}>
+    <div className={styles['container']}>
+      <Card className={styles['onboardingCard']}>
+        <div className={styles['header']}>
+          <div className={styles['progressBar']}>
             <div 
-              className={styles.progressFill}
+              className={styles['progressFill']}
               style={{ width: `${(step / 3) * 100}%` }}
             />
           </div>
-          <span className={styles.stepIndicator}>Step {step} of 3</span>
+          <span className={styles['stepIndicator']}>Step {step} of 3</span>
         </div>
 
         {renderStep()}
 
-        <div className={styles.actions}>
+        <div className={styles['actions']}>
           {step > 1 && (
             <Button
               variant="outline"

@@ -3,7 +3,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '../AuthContext';
 import { useAuth } from '../useAuth';
-import { mockAuthUser, mockSuccessfulSignIn, mockSuccessfulSignUp, resetAuthMocks } from '../../../test/auth-utils';
+import { mockAuthUser, resetAuthMocks } from '../../../test/auth-utils';
 
 // Mock the supabase client
 vi.mock('../../../lib/supabase', () => ({
@@ -123,7 +123,7 @@ describe('AuthContext', () => {
           email: 'test@example.com',
           password: 'wrongpassword',
         });
-      } catch (error) {
+      } catch {
         // Expected to throw
       }
     });
@@ -218,7 +218,7 @@ describe('AuthContext', () => {
           email: 'test@example.com',
           password: 'wrongpassword',
         });
-      } catch (error) {
+      } catch {
         // Expected to throw
       }
     });

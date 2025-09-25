@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
@@ -33,31 +33,31 @@ export function ResetPasswordForm({ onSuccess, onNavigateToSignIn }: ResetPasswo
       await resetPassword(data);
       setIsEmailSent(true);
       onSuccess?.();
-    } catch (error) {
+    } catch {
       // Error is already handled by the auth context
     }
   };
 
   if (isEmailSent) {
     return (
-      <Card className={styles.authCard}>
-        <div className={styles.authHeader}>
-          <h1 className={styles.title}>Check Your Email</h1>
-          <p className={styles.subtitle}>
+      <Card className={styles['authCard']}>
+        <div className={styles['authHeader']}>
+          <h1 className={styles['title']}>Check Your Email</h1>
+          <p className={styles['subtitle']}>
             We've sent a password reset link to{' '}
             <strong>{getValues('email')}</strong>
           </p>
         </div>
 
-        <div className={styles.successMessage}>
-          <div className={styles.successIcon}>✓</div>
+        <div className={styles['successMessage']}>
+          <div className={styles['successIcon']}>✓</div>
           <p>
             Click the link in the email to reset your password. 
             If you don't see the email, check your spam folder.
           </p>
         </div>
 
-        <div className={styles.formActions}>
+        <div className={styles['formActions']}>
           <Button
             onClick={() => setIsEmailSent(false)}
             variant="secondary"
@@ -67,13 +67,13 @@ export function ResetPasswordForm({ onSuccess, onNavigateToSignIn }: ResetPasswo
           </Button>
         </div>
 
-        <div className={styles.authFooter}>
+        <div className={styles['authFooter']}>
           {onNavigateToSignIn ? (
             <Button variant="link" onClick={onNavigateToSignIn}>
               Back to Sign In
             </Button>
           ) : (
-            <Link to="/auth/signin" className={styles.link}>
+            <Link to="/auth/signin" className={styles['link']}>
               Back to Sign In
             </Link>
           )}
@@ -83,17 +83,17 @@ export function ResetPasswordForm({ onSuccess, onNavigateToSignIn }: ResetPasswo
   }
 
   return (
-    <Card className={styles.authCard}>
-      <div className={styles.authHeader}>
-        <h1 className={styles.title}>Reset Password</h1>
-        <p className={styles.subtitle}>
+    <Card className={styles['authCard']}>
+      <div className={styles['authHeader']}>
+        <h1 className={styles['title']}>Reset Password</h1>
+        <p className={styles['subtitle']}>
           Enter your email address and we'll send you a link to reset your password
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+      <form onSubmit={handleSubmit(onSubmit)} className={styles['form']}>
         {error && (
-          <div className={styles.errorAlert} role="alert">
+          <div className={styles['errorAlert']} role="alert">
             {error}
           </div>
         )}
@@ -103,13 +103,13 @@ export function ResetPasswordForm({ onSuccess, onNavigateToSignIn }: ResetPasswo
           type="email"
           label="Email"
           placeholder="Enter your email"
-          error={errors.email?.message}
+          {...(errors.email?.message && { error: errors.email.message })}
           fullWidth
           autoComplete="email"
           autoFocus
         />
 
-        <div className={styles.formActions}>
+        <div className={styles['formActions']}>
           <Button
             type="submit"
             loading={isLoading || isSubmitting}
@@ -121,7 +121,7 @@ export function ResetPasswordForm({ onSuccess, onNavigateToSignIn }: ResetPasswo
         </div>
       </form>
 
-      <div className={styles.authFooter}>
+      <div className={styles['authFooter']}>
         <p>
           Remember your password?{' '}
           {onNavigateToSignIn ? (
@@ -129,7 +129,7 @@ export function ResetPasswordForm({ onSuccess, onNavigateToSignIn }: ResetPasswo
               Sign in
             </Button>
           ) : (
-            <Link to="/auth/signin" className={styles.link}>
+            <Link to="/auth/signin" className={styles['link']}>
               Sign in
             </Link>
           )}

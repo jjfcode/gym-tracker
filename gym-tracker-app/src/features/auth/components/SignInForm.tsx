@@ -1,4 +1,3 @@
-import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
@@ -42,15 +41,15 @@ export function SignInForm({ onSuccess, onNavigateToSignUp, onNavigateToReset }:
   };
 
   return (
-    <Card className={styles.authCard}>
-      <div className={styles.authHeader}>
-        <h1 className={styles.title}>Welcome Back</h1>
-        <p className={styles.subtitle}>Sign in to your account to continue</p>
+    <Card className={styles['authCard']}>
+      <div className={styles['authHeader']}>
+        <h1 className={styles['title']}>Welcome Back</h1>
+        <p className={styles['subtitle']}>Sign in to your account to continue</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+      <form onSubmit={handleSubmit(onSubmit)} className={styles['form']}>
         {error && (
-          <div className={styles.errorAlert} role="alert">
+          <div className={styles['errorAlert']} role="alert">
             {error}
           </div>
         )}
@@ -60,7 +59,7 @@ export function SignInForm({ onSuccess, onNavigateToSignUp, onNavigateToReset }:
           type="email"
           label="Email"
           placeholder="Enter your email"
-          error={errors.email?.message}
+          {...(errors.email?.message && { error: errors.email.message })}
           fullWidth
           autoComplete="email"
           autoFocus
@@ -71,12 +70,12 @@ export function SignInForm({ onSuccess, onNavigateToSignUp, onNavigateToReset }:
           type="password"
           label="Password"
           placeholder="Enter your password"
-          error={errors.password?.message}
+          {...(errors.password?.message && { error: errors.password.message })}
           fullWidth
           autoComplete="current-password"
         />
 
-        <div className={styles.formActions}>
+        <div className={styles['formActions']}>
           <Button
             type="submit"
             loading={isLoading || isSubmitting}
@@ -87,20 +86,20 @@ export function SignInForm({ onSuccess, onNavigateToSignUp, onNavigateToReset }:
           </Button>
         </div>
 
-        <div className={styles.formFooter}>
+        <div className={styles['formFooter']}>
           {onNavigateToReset ? (
             <Button variant="link" onClick={onNavigateToReset}>
               Forgot your password?
             </Button>
           ) : (
-            <Link to="/auth/reset-password" className={styles.link}>
+            <Link to="/auth/reset-password" className={styles['link']}>
               Forgot your password?
             </Link>
           )}
         </div>
       </form>
 
-      <div className={styles.authFooter}>
+      <div className={styles['authFooter']}>
         <p>
           Don't have an account?{' '}
           {onNavigateToSignUp ? (
@@ -108,7 +107,7 @@ export function SignInForm({ onSuccess, onNavigateToSignUp, onNavigateToReset }:
               Sign up
             </Button>
           ) : (
-            <Link to="/auth/signup" className={styles.link}>
+            <Link to="/auth/signup" className={styles['link']}>
               Sign up
             </Link>
           )}

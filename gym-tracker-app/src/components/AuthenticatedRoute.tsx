@@ -5,12 +5,10 @@ import { LoadingSpinner } from './ui/LoadingSpinner/LoadingSpinner';
 
 interface AuthenticatedRouteProps {
   children: React.ReactNode;
-  requireOnboarding?: boolean;
 }
 
 export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({ 
-  children, 
-  requireOnboarding = false 
+  children 
 }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
 
