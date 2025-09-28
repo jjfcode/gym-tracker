@@ -291,7 +291,7 @@ export class AuthService {
       
       // Add timeout to prevent hanging
       const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('fetchUserProfile timeout')), 5000) // Reduced timeout
+        setTimeout(() => reject(new Error('fetchUserProfile timeout')), 10000) // Increased timeout to 10 seconds
       );
       
       const profilePromise = supabase

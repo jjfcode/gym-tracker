@@ -43,7 +43,13 @@ const WelcomeMessage: React.FC = () => {
   const navigate = useNavigate();
   
   const displayName = user?.profile?.display_name || user?.email?.split('@')[0] || 'there';
-  const isProfileIncomplete = !user?.profile?.display_name || user?.profile?.display_name.trim() === '';
+  
+  // Check if essential onboarding fields are missing
+  const profile = user?.profile;
+  const isProfileIncomplete = !profile?.full_name || 
+                            !profile?.fitness_goal || 
+                            !profile?.experience_level || 
+                            !profile?.workout_frequency;
   
   return (
     <Card className={styles['welcomeCard']}>

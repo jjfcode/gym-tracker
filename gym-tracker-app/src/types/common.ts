@@ -19,6 +19,13 @@ export interface UserProfile extends BaseEntity {
   units: 'metric' | 'imperial';
   theme: 'dark' | 'light' | 'system';
   timezone: string;
+  // Onboarding fields
+  full_name?: string;
+  fitness_goal?: 'Weight Loss' | 'Muscle Gain' | 'General Fitness' | 'Endurance' | 'Strength';
+  experience_level?: 'Beginner' | 'Intermediate' | 'Advanced';
+  workout_frequency?: number;
+  weight?: number;
+  height?: number;
 }
 
 export interface WeightLog extends BaseEntity {
