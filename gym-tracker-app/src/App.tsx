@@ -10,6 +10,11 @@ import { AppLayout } from './components/layout/AppLayout/AppLayout';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useAuth } from './features/auth';
 
+// Load profile diagnostics in development
+if (import.meta.env.DEV) {
+  import('./lib/profileDiagnostics');
+}
+
 // Lazy load route components for code splitting
 const AuthFlow = lazy(() => import('./features/auth/components/AuthFlow'));
 const Dashboard = lazy(() => import('./features/dashboard/components/Dashboard'));

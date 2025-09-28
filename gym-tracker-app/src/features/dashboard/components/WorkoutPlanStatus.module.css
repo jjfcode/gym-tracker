@@ -1,0 +1,46 @@
+.loading {
+  padding: 12px;
+  text-align: center;
+  color: #718096;
+  font-size: 14px;
+}
+
+.noplanCard {
+  border: 1px solid #fed7d7;
+  background: #feb2b2;
+}
+
+.noPlanContent {
+  padding: 16px;
+}
+
+.noPlanContent h4 {
+  margin: 0 0 8px 0;
+  color: #742a2a;
+}
+
+.noPlanContent p {
+  margin: 0 0 12px 0;
+  color: #742a2a;
+  font-size: 14px;
+}
+
+.planCard {
+  border: 1px solid #c6f6d5;
+  background: #f0fff4;
+}
+
+.planContent {
+  padding: 16px;
+}
+
+.planContent h4 {
+  margin: 0 0 8px 0;
+  color: #276749;
+}
+
+.planContent p {
+  margin: 0 0 12px 0;
+  color: #276749;
+  font-size: 14px;
+}

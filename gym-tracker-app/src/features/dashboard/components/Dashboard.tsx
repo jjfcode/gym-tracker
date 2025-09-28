@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '../../../components/ui';
 import { Button } from '../../../components/ui/Button/Button';
 import { useAuth } from '../../auth';
+import { ProfileDebug } from '../../auth/components/ProfileDebug';
+import { WorkoutPlanStatus } from './WorkoutPlanStatus';
 import styles from './Dashboard.module.css';
 
 // Simple components without React Query for now
@@ -117,6 +119,8 @@ const WelcomeMessage: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      <ProfileDebug />
     </Card>
   );
 };
@@ -189,6 +193,7 @@ const Dashboard: React.FC = () => {
     <div className={styles['dashboard']}>
       <div className={styles['welcomeSection']}>
         <WelcomeMessage />
+        <WorkoutPlanStatus />
       </div>
       
       <div className={styles['quickStats']}>

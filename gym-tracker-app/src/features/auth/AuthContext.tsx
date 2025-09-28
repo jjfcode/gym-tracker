@@ -114,6 +114,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
           } else if (event === 'USER_UPDATED' && session?.user) {
             console.log('User updated, refreshing profile...');
             try {
+              // Add a small delay to ensure database has time to update
+              setTimeout(async () => {
+                try {
+                  const profile = await AuthService.fetchUserProfile(session.user.id);
+                  setUser({
+                    ...session.user,
+                    profile: profile || AuthService.createDefaultProfile(session.user.id),
+                  });
+                  console.log('Profile updated successfully after USER_UPDATED');
+                } catch (error) {
+                  console.error('Profile fetch failed on delayed user update:', error);
+                  setUser({
+                    ...session.user,
+                    profile: AuthService.createDefaultProfile(session.user.id),
+                  });
+                }
+              }, 1000);
+              
+              // Also update immediately in case the delay isn't needed
               const profile = await AuthService.fetchUserProfile(session.user.id);
               setUser({
                 ...session.user,
@@ -202,6 +221,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const refreshProfile = async (): Promise<void> => {
+    if (!user?.id) return;
+    
+    try {
+      console.log('Manually refreshing user profile...');
+      const profile = await AuthService.fetchUserProfile(user.id);
+      setUser({
+        ...user,
+        profile: profile || AuthService.createDefaultProfile(user.id),
+      });
+      console.log('Profile refreshed successfully');
+    } catch (error) {
+      console.error('Profile refresh failed:', error);
+    }
+  };
+
   const contextValue: AuthContextType = {
     user,
     isLoading,
@@ -212,6 +247,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signOut,
     resetPassword,
     updatePassword,
+    refreshProfile,
     clearError,
   };
 

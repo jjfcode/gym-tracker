@@ -1,0 +1,59 @@
+.container {
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  background: #f8f9fa;
+}
+
+.header h4 {
+  margin: 0 0 4px 0;
+  color: #2d3748;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.header p {
+  margin: 0;
+  color: #718096;
+  font-size: 12px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.result {
+  margin: 12px 0;
+  padding: 8px;
+  background: #f0f4f8;
+  border-radius: 4px;
+  border-left: 3px solid #4299e1;
+}
+
+.result pre {
+  margin: 0;
+  font-size: 12px;
+  color: #2d3748;
+  white-space: pre-wrap;
+}
+
+.devInfo {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e1e5e9;
+}
+
+.devInfo small {
+  color: #718096;
+  font-size: 11px;
+}
+
+.devInfo code {
+  background: #e2e8f0;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 10px;
+}

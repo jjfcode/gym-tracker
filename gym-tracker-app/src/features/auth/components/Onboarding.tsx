@@ -19,7 +19,7 @@ interface OnboardingData {
 }
 
 const Onboarding: React.FC = () => {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<OnboardingData>({
@@ -35,32 +35,71 @@ const Onboarding: React.FC = () => {
       console.log('Starting onboarding completion...');
       
       try {
-        // Add timeout to profile update
-        const profileUpdatePromise = supabase
-          .from('profile')
-          .update({
-            display_name: data.full_name,
-            units: data.units,
-          })
-          .eq('user_id', user!.id);
+        // Update profile with retries
+        let profileUpdateSuccess = false;
+        let attempts = 0;
+        const maxAttempts = 3;
 
-        const profileTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Profile update timeout')), 5000)
-        );
+        while (!profileUpdateSuccess && attempts < maxAttempts) {
+          attempts++;
+          console.log(`Profile update attempt ${attempts}/${maxAttempts}`);
 
-        try {
-          const result = await Promise.race([
-            profileUpdatePromise,
-            profileTimeoutPromise
-          ]) as { error?: Error | null };
+          try {
+            const { data: profileData, error } = await supabase
+              .from('profile')
+              .update({
+                display_name: data.full_name,
+                units: data.units,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('user_id', user!.id)
+              .select()
+              .single();
 
-          if (result.error) {
-            console.warn('Profile update failed, but continuing:', result.error);
-          } else {
-            console.log('Profile updated successfully');
+            if (error) {
+              console.error('Profile update error:', error);
+              
+              // If profile doesn't exist, try to create it
+              if (error.code === 'PGRST116' || error.message.includes('No rows found')) {
+                console.log('Profile not found, creating new profile...');
+                const { error: createError } = await supabase
+                  .from('profile')
+                  .insert({
+                    user_id: user!.id,
+                    display_name: data.full_name,
+                    units: data.units,
+                    locale: 'en',
+                    theme: 'system',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                  });
+
+                if (!createError) {
+                  profileUpdateSuccess = true;
+                  console.log('Profile created successfully');
+                } else {
+                  console.error('Profile creation failed:', createError);
+                  if (attempts === maxAttempts) {
+                    throw new Error(`Profile creation failed after ${maxAttempts} attempts: ${createError.message}`);
+                  }
+                }
+              } else {
+                if (attempts === maxAttempts) {
+                  throw new Error(`Profile update failed after ${maxAttempts} attempts: ${error.message}`);
+                }
+              }
+            } else {
+              profileUpdateSuccess = true;
+              console.log('Profile updated successfully:', profileData);
+            }
+          } catch (error) {
+            console.error(`Profile update attempt ${attempts} failed:`, error);
+            if (attempts === maxAttempts) {
+              throw new Error(`Profile update failed after ${maxAttempts} attempts: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            }
+            // Wait before retry
+            await new Promise(resolve => setTimeout(resolve, 1000));
           }
-        } catch (error) {
-          console.warn('Profile update timed out or failed, but continuing:', error);
         }
 
         // Try to log initial weight if provided (with timeout)
@@ -95,21 +134,84 @@ const Onboarding: React.FC = () => {
           }
         }
 
-        console.log('Onboarding completion finished');
+        // Create workout plan based on user preferences
+        try {
+          console.log('Creating workout plan based on preferences...');
+          
+          // Import the necessary services and templates
+          const { WORKOUT_TEMPLATES } = await import('../../onboarding/data/workoutTemplates');
+          const { createWorkoutPlan } = await import('../../onboarding/services/onboardingService');
+          
+          // Get the template for the selected frequency
+          const template = WORKOUT_TEMPLATES[data.workout_frequency];
+
+          if (!template) {
+            console.warn('No suitable workout template found for frequency:', data.workout_frequency);
+          } else {
+            console.log('Selected workout template:', template.name);
+            console.log('Template details:', {
+              daysPerWeek: template.daysPerWeek,
+              workouts: template.workouts.length,
+              fitnessGoal: data.fitness_goal,
+              experience: data.experience_level
+            });
+
+            // Create the workout plan starting from next Monday (or tomorrow if today is Monday)
+            const today = new Date();
+            const nextMonday = new Date(today);
+            const daysUntilMonday = (7 - today.getDay() + 1) % 7;
+            nextMonday.setDate(today.getDate() + (daysUntilMonday === 0 ? 7 : daysUntilMonday));
+
+            await createWorkoutPlan({
+              user_id: user!.id,
+              template: template,
+              startDate: nextMonday
+            });
+
+            console.log('🎉 Workout plan created successfully!');
+            console.log(`📅 Plan starts: ${nextMonday.toDateString()}`);
+            console.log(`💪 Training frequency: ${template.daysPerWeek} days/week`);
+            console.log(`🎯 Fitness goal: ${data.fitness_goal}`);
+            console.log(`📊 Experience level: ${data.experience_level}`);
+            console.log('🗓️ Your workout calendar is now ready! Check the Planning tab to see your schedule.');
+          }
+        } catch (error) {
+          console.error('Failed to create workout plan:', error);
+          // Don't fail onboarding if workout plan creation fails, but let user know
+          console.warn('Workout plan creation failed, but profile setup completed successfully');
+        }
+
+        console.log('Onboarding completion finished successfully');
         return data;
       } catch (error) {
-        console.warn('Onboarding data save failed, but continuing:', error);
-        return data;
+        console.error('Onboarding completion failed:', error);
+        throw error; // Don't continue silently, let the error bubble up
       }
     },
-    onSuccess: () => {
-      console.log('Onboarding completed, navigating to dashboard');
-      navigate('/dashboard');
+    onSuccess: async () => {
+      console.log('🎉 Onboarding completed successfully!');
+      
+      // Force refresh the auth context to pick up the updated profile
+      try {
+        await refreshProfile();
+        console.log('✅ Profile refreshed after onboarding completion');
+      } catch (error) {
+        console.warn('Failed to refresh profile after onboarding:', error);
+      }
+      
+      // Show success message
+      console.log('🚀 Redirecting to dashboard...');
+      console.log('💡 Your personalized workout plan is ready in the Planning section!');
+      
+      // Small delay to allow profile to be updated in auth context
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 500);
     },
     onError: (error) => {
       console.error('Onboarding mutation failed:', error);
-      // Still navigate to dashboard even if there's an error
-      navigate('/dashboard');
+      // Show user the error instead of silently continuing
+      alert(`Profile setup failed: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again or contact support.`);
     },
   });
 
@@ -244,7 +346,7 @@ const Onboarding: React.FC = () => {
         return (
           <div className={styles['stepContent']}>
             <h2>Experience & Schedule</h2>
-            <p>Tell us about your fitness experience and workout schedule.</p>
+            <p>Tell us about your fitness experience and workout schedule. We'll create a personalized workout plan for you!</p>
             
             <div className={styles['formGroup']}>
               <label>Experience Level</label>
@@ -332,9 +434,9 @@ const Onboarding: React.FC = () => {
             }
           >
             {completeOnboardingMutation.isPending
-              ? 'Setting up...'
+              ? 'Creating your personalized workout plan...'
               : step === 3
-              ? 'Complete Setup'
+              ? 'Complete Setup & Create Plan'
               : 'Next'
             }
           </Button>
