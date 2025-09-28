@@ -10,9 +10,15 @@ import { AppLayout } from './components/layout/AppLayout/AppLayout';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useAuth } from './features/auth';
 
-// Load profile diagnostics in development
+// Load debugging tools in development
 if (import.meta.env.DEV) {
   import('./lib/profileDiagnostics');
+  import('./lib/debugUtils');
+  import('./lib/mcpMonitoring');
+  import('./lib/mcpDashboard').then(() => {
+    console.log('🚀 MCP Dashboard initialized');
+    console.log('📊 Access dashboard with: window.mcpDashboard');
+  });
 }
 
 // Lazy load route components for code splitting

@@ -6,6 +6,8 @@ import { Button } from '../../../components/ui/Button/Button';
 import { Input } from '../../../components/ui/Input/Input';
 import { useAuth } from '../useAuth';
 import { supabase } from '../../../lib/supabase';
+import { appDebugger, DEBUG_CATEGORIES, PerformanceMonitor } from '../../../lib/debugUtils';
+import { mcpDashboard } from '../../../lib/mcpDashboard';
 import styles from './Onboarding.module.css';
 
 interface OnboardingData {
@@ -32,7 +34,8 @@ const Onboarding: React.FC = () => {
 
   const completeOnboardingMutation = useMutation({
     mutationFn: async (data: OnboardingData) => {
-      console.log('Starting onboarding completion...');
+      appDebugger.info(DEBUG_CATEGORIES.ONBOARDING, 'Starting onboarding completion', data);
+      PerformanceMonitor.startTimer('onboarding-completion');
       
       try {
         // Update profile with retries
@@ -42,7 +45,7 @@ const Onboarding: React.FC = () => {
 
         while (!profileUpdateSuccess && attempts < maxAttempts) {
           attempts++;
-          console.log(`Profile update attempt ${attempts}/${maxAttempts}`);
+          appDebugger.info(DEBUG_CATEGORIES.PROFILE, `Profile update attempt ${attempts}/${maxAttempts}`);
 
           try {
             const { data: profileData, error } = await supabase
@@ -57,11 +60,11 @@ const Onboarding: React.FC = () => {
               .single();
 
             if (error) {
-              console.error('Profile update error:', error);
+              appDebugger.error(DEBUG_CATEGORIES.PROFILE, 'Profile update error', error);
               
               // If profile doesn't exist, try to create it
               if (error.code === 'PGRST116' || error.message.includes('No rows found')) {
-                console.log('Profile not found, creating new profile...');
+                appDebugger.info(DEBUG_CATEGORIES.PROFILE, 'Profile not found, creating new profile');
                 const { error: createError } = await supabase
                   .from('profile')
                   .insert({
@@ -76,9 +79,9 @@ const Onboarding: React.FC = () => {
 
                 if (!createError) {
                   profileUpdateSuccess = true;
-                  console.log('Profile created successfully');
+                  appDebugger.success(DEBUG_CATEGORIES.PROFILE, 'Profile created successfully');
                 } else {
-                  console.error('Profile creation failed:', createError);
+                  appDebugger.error(DEBUG_CATEGORIES.PROFILE, 'Profile creation failed', createError);
                   if (attempts === maxAttempts) {
                     throw new Error(`Profile creation failed after ${maxAttempts} attempts: ${createError.message}`);
                   }
@@ -90,7 +93,7 @@ const Onboarding: React.FC = () => {
               }
             } else {
               profileUpdateSuccess = true;
-              console.log('Profile updated successfully:', profileData);
+              appDebugger.success(DEBUG_CATEGORIES.PROFILE, 'Profile updated successfully', profileData);
             }
           } catch (error) {
             console.error(`Profile update attempt ${attempts} failed:`, error);
@@ -136,7 +139,8 @@ const Onboarding: React.FC = () => {
 
         // Create workout plan based on user preferences
         try {
-          console.log('Creating workout plan based on preferences...');
+          appDebugger.info(DEBUG_CATEGORIES.WORKOUT, 'Creating workout plan based on preferences');
+          PerformanceMonitor.startTimer('workout-plan-creation');
           
           // Import the necessary services and templates
           const { WORKOUT_TEMPLATES } = await import('../../onboarding/data/workoutTemplates');
@@ -146,10 +150,10 @@ const Onboarding: React.FC = () => {
           const template = WORKOUT_TEMPLATES[data.workout_frequency];
 
           if (!template) {
-            console.warn('No suitable workout template found for frequency:', data.workout_frequency);
+            appDebugger.warn(DEBUG_CATEGORIES.WORKOUT, 'No suitable workout template found', { frequency: data.workout_frequency });
           } else {
-            console.log('Selected workout template:', template.name);
-            console.log('Template details:', {
+            appDebugger.info(DEBUG_CATEGORIES.WORKOUT, 'Selected workout template', { templateName: template.name });
+            appDebugger.info(DEBUG_CATEGORIES.WORKOUT, 'Template details', {
               daysPerWeek: template.daysPerWeek,
               workouts: template.workouts.length,
               fitnessGoal: data.fitness_goal,
@@ -168,20 +172,22 @@ const Onboarding: React.FC = () => {
               startDate: nextMonday
             });
 
-            console.log('🎉 Workout plan created successfully!');
-            console.log(`📅 Plan starts: ${nextMonday.toDateString()}`);
-            console.log(`💪 Training frequency: ${template.daysPerWeek} days/week`);
-            console.log(`🎯 Fitness goal: ${data.fitness_goal}`);
-            console.log(`📊 Experience level: ${data.experience_level}`);
+            PerformanceMonitor.endTimer('workout-plan-creation');
+            appDebugger.success(DEBUG_CATEGORIES.WORKOUT, 'Workout plan created successfully', {
+              planStart: nextMonday.toDateString(),
+              frequency: template.daysPerWeek,
+              goal: data.fitness_goal,
+              experience: data.experience_level
+            });
             console.log('🗓️ Your workout calendar is now ready! Check the Planning tab to see your schedule.');
           }
         } catch (error) {
-          console.error('Failed to create workout plan:', error);
-          // Don't fail onboarding if workout plan creation fails, but let user know
+          appDebugger.error(DEBUG_CATEGORIES.WORKOUT, 'Failed to create workout plan', error);
           console.warn('Workout plan creation failed, but profile setup completed successfully');
         }
 
-        console.log('Onboarding completion finished successfully');
+        PerformanceMonitor.endTimer('onboarding-completion');
+        appDebugger.success(DEBUG_CATEGORIES.ONBOARDING, 'Onboarding completion finished successfully');
         return data;
       } catch (error) {
         console.error('Onboarding completion failed:', error);
@@ -191,12 +197,24 @@ const Onboarding: React.FC = () => {
     onSuccess: async () => {
       console.log('🎉 Onboarding completed successfully!');
       
+      // Track successful onboarding completion
+      mcpDashboard.api.trackNavigation('Onboarding', {
+        action: 'onboarding_success',
+        userId: user?.id,
+        completedAt: new Date().toISOString()
+      });
+      
       // Force refresh the auth context to pick up the updated profile
       try {
+        const profileStartTime = performance.now();
         await refreshProfile();
+        mcpDashboard.api.trackPerformance('Profile Refresh After Onboarding', profileStartTime);
         console.log('✅ Profile refreshed after onboarding completion');
       } catch (error) {
         console.warn('Failed to refresh profile after onboarding:', error);
+        mcpDashboard.api.trackError('Onboarding', error as Error, {
+          context: 'profile_refresh_after_onboarding'
+        });
       }
       
       // Show success message
@@ -220,16 +238,39 @@ const Onboarding: React.FC = () => {
   };
 
   const handleNext = () => {
+    const startTime = performance.now();
+    
     if (step < 3) {
+      // Track step progression
+      mcpDashboard.api.trackNavigation('Onboarding', {
+        action: 'step_progression',
+        fromStep: step,
+        toStep: step + 1,
+        formData: { ...formData }
+      });
+      
       setStep(step + 1);
+      mcpDashboard.api.trackPerformance('Onboarding Step Navigation', startTime);
     } else {
       console.log('Starting onboarding with data:', formData);
+      
+      // Track onboarding completion attempt
+      mcpDashboard.api.trackFormSubmit('Onboarding', {
+        action: 'complete_onboarding',
+        formData: { ...formData },
+        userId: user?.id
+      });
+      
       completeOnboardingMutation.mutate(formData);
       
       // Fallback: if mutation doesn't complete in 15 seconds, navigate anyway
       setTimeout(() => {
         if (completeOnboardingMutation.isPending) {
           console.warn('Onboarding taking too long, navigating to dashboard anyway');
+          mcpDashboard.api.trackError('Onboarding', new Error('Onboarding timeout'), {
+            duration: 15000,
+            formData: { ...formData }
+          });
           navigate('/dashboard');
         }
       }, 15000);

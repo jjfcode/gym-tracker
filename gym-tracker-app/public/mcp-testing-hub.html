@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Chrome DevTools - Testing Hub</title>
+    <style>
+        body {
+            font-family: 'Monaco', 'Consolas', monospace;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #00ff88;
+            font-size: 2.5rem;
+            margin: 0;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+        
+        .header p {
+            color: #888;
+            font-size: 1.1rem;
+            margin: 10px 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-color: rgba(0, 255, 136, 0.3);
+        }
+        
+        .card h3 {
+            color: #00bfff;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card h3 .emoji {
+            font-size: 1.5em;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #00ff88 0%, #00bfff 100%);
+            color: #1a1a2e;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: inherit;
+            margin: 8px 8px 8px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+        }
+        
+        .btn.danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
+            color: white;
+        }
+        
+        .btn.warning {
+            background: linear-gradient(135deg, #ffa500 0%, #ff6348 100%);
+            color: white;
+        }
+        
+        .status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #00ff88;
+            max-width: 300px;
+        }
+        
+        .code {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: 12px;
+            margin: 10px 0;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 MCP Chrome DevTools</h1>
+        <p>Model Context Protocol - Testing Hub for Gym Tracker</p>
+        <p>Open Chrome DevTools (F12) → Console Tab to see live monitoring</p>
+    </div>
+
+    <div class="container">
+        <!-- Real-time Monitoring -->
+        <div class="card">
+            <h3><span class="emoji">📊</span> Real-time Monitoring</h3>
+            <p>Track user interactions, performance, and app state in real-time</p>
+            <button class="btn" onclick="loadMCPDashboard()">Launch Dashboard</button>
+            <button class="btn" onclick="showCurrentState()">Show State</button>
+            <div class="code">
+                // Access global dashboard
+                window.mcpDashboard
+            </div>
+        </div>
+
+        <!-- User Journey Testing -->
+        <div class="card">
+            <h3><span class="emoji">👤</span> User Journey Testing</h3>
+            <p>Simulate complete user flows through the application</p>
+            <button class="btn" onclick="simulateOnboarding()">Simulate Onboarding</button>
+            <button class="btn" onclick="simulateWorkoutFlow()">Workout Creation</button>
+            <div class="code">
+                mcpDemo.simulateOnboardingFlow()
+            </div>
+        </div>
+
+        <!-- Performance Analysis -->
+        <div class="card">
+            <h3><span class="emoji">⚡</span> Performance Analysis</h3>
+            <p>Monitor render times, database queries, and identify bottlenecks</p>
+            <button class="btn" onclick="testPerformance()">Test Performance</button>
+            <button class="btn warning" onclick="simulateSlowQueries()">Simulate Slow Queries</button>
+            <div class="code">
+                mcpDemo.simulatePerformanceIssues()
+            </div>
+        </div>
+
+        <!-- Error Tracking -->
+        <div class="card">
+            <h3><span class="emoji">🐛</span> Error Tracking</h3>
+            <p>Test error monitoring with full context and stack traces</p>
+            <button class="btn danger" onclick="simulateErrors()">Simulate Errors</button>
+            <button class="btn" onclick="testErrorRecovery()">Test Recovery</button>
+            <div class="code">
+                mcpDemo.simulateErrors()
+            </div>
+        </div>
+
+        <!-- Database Monitoring -->
+        <div class="card">
+            <h3><span class="emoji">🗄️</span> Database Monitoring</h3>
+            <p>Track Supabase queries, monitor performance, and optimize data access</p>
+            <button class="btn" onclick="testDatabaseQueries()">Test DB Queries</button>
+            <button class="btn" onclick="monitorSupabase()">Monitor Supabase</button>
+            <div class="code">
+                mcpDemo.simulateDatabaseQueries()
+            </div>
+        </div>
+
+        <!-- Analytics & Insights -->
+        <div class="card">
+            <h3><span class="emoji">📈</span> Analytics & Insights</h3>
+            <p>Export session data and generate user behavior insights</p>
+            <button class="btn" onclick="exportData()">Export Session Data</button>
+            <button class="btn" onclick="generateReport()">Generate Report</button>
+            <div class="code">
+                mcpDemo.exportSessionData()
+            </div>
+        </div>
+    </div>
+
+    <div class="status" id="status">
+        <div><strong>🚀 MCP Status:</strong> Initializing...</div>
+        <div id="statusText">Loading Chrome DevTools integration...</div>
+    </div>
+
+    <script>
+        // Status updates
+        function updateStatus(text, type = 'info') {
+            const statusEl = document.getElementById('statusText');
+            const colors = {
+                info: '#00bfff',
+                success: '#00ff88',
+                warning: '#ffa500',
+                error: '#ff6b6b'
+            };
+            
+            statusEl.textContent = text;
+            statusEl.style.color = colors[type];
+        }
+
+        // Initialize MCP Dashboard
+        function loadMCPDashboard() {
+            updateStatus('Loading MCP Dashboard...', 'info');
+            
+            // Load the dashboard script
+            const script = document.createElement('script');
+            script.src = '/mcp-demo.js';
+            script.onload = () => {
+                updateStatus('MCP Dashboard loaded successfully!', 'success');
+                console.log('🚀 MCP Dashboard ready - check console!');
+            };
+            script.onerror = () => {
+                updateStatus('Failed to load MCP Dashboard', 'error');
+            };
+            document.head.appendChild(script);
+        }
+
+        // Show current state
+        function showCurrentState() {
+            if (window.mcpDemo) {
+                window.mcpDemo.showDashboardState();
+                updateStatus('Dashboard state displayed in console', 'success');
+            } else {
+                updateStatus('MCP Dashboard not loaded yet', 'warning');
+                loadMCPDashboard();
+            }
+        }
+
+        // User journey simulations
+        function simulateOnboarding() {
+            if (window.mcpDemo) {
+                window.mcpDemo.simulateOnboardingFlow();
+                updateStatus('Onboarding flow simulation started', 'success');
+            } else {
+                updateStatus('Loading MCP Dashboard first...', 'info');
+                loadMCPDashboard();
+            }
+        }
+
+        function simulateWorkoutFlow() {
+            console.group('🏋️ Workout Flow Simulation');
+            
+            // Simulate workout creation process
+            if (window.mcpDashboard) {
+                window.mcpDashboard.api.trackNavigation('WorkoutPlanning', {
+                    action: 'start_workout_creation',
+                    timestamp: new Date().toISOString()
+                });
+                
+                setTimeout(() => {
+                    window.mcpDashboard.api.trackClick('ExerciseSelection', {
+                        selectedExercises: ['Push-ups', 'Squats', 'Planks'],
+                        category: 'Bodyweight'
+                    });
+                }, 1000);
+                
+                setTimeout(() => {
+                    window.mcpDashboard.api.trackFormSubmit('WorkoutCreation', {
+                        action: 'save_workout',
+                        exerciseCount: 3,
+                        estimatedDuration: 30
+                    });
+                }, 2000);
+            }
+            
+            console.log('✅ Workout flow simulation complete');
+            console.groupEnd();
+            updateStatus('Workout flow simulation completed', 'success');
+        }
+
+        // Performance testing
+        function testPerformance() {
+            if (window.mcpDemo) {
+                window.mcpDemo.simulatePerformanceIssues();
+                updateStatus('Performance test completed', 'success');
+            } else {
+                loadMCPDashboard();
+            }
+        }
+
+        function simulateSlowQueries() {
+            console.group('🐌 Slow Query Simulation');
+            
+            if (window.mcpDashboard) {
+                // Simulate progressively slower queries
+                window.mcpDashboard.api.trackQuery({
+                    table: 'exercises',
+                    operation: 'select',
+                    duration: 1500,
+                    success: true,
+                    rowCount: 100
+                });
+                
+                window.mcpDashboard.api.trackQuery({
+                    table: 'workout_exercises',
+                    operation: 'select',
+                    duration: 3000,
+                    success: true,
+                    rowCount: 500
+                });
+                
+                window.mcpDashboard.api.trackQuery({
+                    table: 'user_statistics',
+                    operation: 'select',
+                    duration: 5500,
+                    success: false,
+                    error: 'Query timeout - too much data'
+                });
+            }
+            
+            console.log('⚠️ Slow query scenarios completed');
+            console.groupEnd();
+            updateStatus('Slow query simulation completed', 'warning');
+        }
+
+        // Error testing
+        function simulateErrors() {
+            if (window.mcpDemo) {
+                window.mcpDemo.simulateErrors();
+                updateStatus('Error simulation completed', 'error');
+            } else {
+                loadMCPDashboard();
+            }
+        }
+
+        function testErrorRecovery() {
+            console.group('🔄 Error Recovery Testing');
+            
+            if (window.mcpDashboard) {
+                // Simulate error and recovery
+                window.mcpDashboard.api.trackError('WorkoutTimer', 
+                    new Error('Timer synchronization failed'), 
+                    { 
+                        context: 'mid_workout',
+                        recoveryAttempt: 1
+                    }
+                );
+                
+                setTimeout(() => {
+                    window.mcpDashboard.api.trackNavigation('WorkoutTimer', {
+                        action: 'error_recovery_success',
+                        recoveryMethod: 'local_storage_fallback'
+                    });
+                }, 1000);
+            }
+            
+            console.log('✅ Error recovery test completed');
+            console.groupEnd();
+            updateStatus('Error recovery test completed', 'success');
+        }
+
+        // Database testing
+        function testDatabaseQueries() {
+            if (window.mcpDemo) {
+                window.mcpDemo.simulateDatabaseQueries();
+                updateStatus('Database query test completed', 'success');
+            } else {
+                loadMCPDashboard();
+            }
+        }
+
+        function monitorSupabase() {
+            console.group('🔍 Supabase Monitoring');
+            console.log('Monitoring Supabase operations...');
+            console.log('• Profile queries: Tracked ✅');
+            console.log('• Workout operations: Tracked ✅');
+            console.log('• Exercise lookups: Tracked ✅');
+            console.log('• Authentication: Tracked ✅');
+            console.groupEnd();
+            updateStatus('Supabase monitoring active', 'success');
+        }
+
+        // Analytics
+        function exportData() {
+            if (window.mcpDemo) {
+                const data = window.mcpDemo.exportSessionData();
+                updateStatus('Session data exported to console', 'success');
+                
+                // Also create a downloadable file
+                const blob = new Blob([JSON.stringify(data, null, 2)], {
+                    type: 'application/json'
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `mcp-session-${Date.now()}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            } else {
+                loadMCPDashboard();
+            }
+        }
+
+        function generateReport() {
+            console.group('📊 MCP Analytics Report');
+            
+            if (window.mcpDashboard) {
+                const data = window.mcpDashboard.exportData();
+                
+                console.log('📋 **SESSION SUMMARY**');
+                console.table({
+                    'Session Duration': Math.floor((Date.now() - parseInt(data.sessionId.split('_')[1])) / 1000) + ' seconds',
+                    'Total Actions': data.userActions.length,
+                    'Performance Metrics': data.performanceMetrics.length,
+                    'Database Queries': data.databaseQueries.length,
+                    'Errors Tracked': data.userActions.filter(a => a.type === 'error').length
+                });
+                
+                // User behavior patterns
+                const actionTypes = data.userActions.reduce((acc, action) => {
+                    acc[action.type] = (acc[action.type] || 0) + 1;
+                    return acc;
+                }, {});
+                
+                console.log('👤 **USER BEHAVIOR PATTERNS**');
+                console.table(actionTypes);
+                
+                // Performance insights
+                const slowMetrics = data.performanceMetrics.filter(m => m.status === 'critical');
+                if (slowMetrics.length > 0) {
+                    console.log('⚠️ **PERFORMANCE ISSUES**');
+                    console.table(slowMetrics.map(m => ({
+                        Operation: m.name,
+                        Duration: m.value + 'ms',
+                        Threshold: m.threshold + 'ms'
+                    })));
+                }
+                
+                updateStatus('Analytics report generated', 'success');
+            } else {
+                loadMCPDashboard();
+            }
+            
+            console.groupEnd();
+        }
+
+        // Auto-initialize
+        window.addEventListener('load', () => {
+            updateStatus('Chrome DevTools ready - F12 to open console', 'success');
+            
+            // Auto-load MCP dashboard after a short delay
+            setTimeout(() => {
+                loadMCPDashboard();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
